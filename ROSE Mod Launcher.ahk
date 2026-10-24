@@ -856,7 +856,7 @@ return TextBackgroundBrush
 }
 return DllCall("user32\CallWindowProc", "Ptr", WindowProcOld, "Ptr", hwnd, "UInt", uMsg, "Ptr", wParam, "Ptr", lParam)
 }
-Version := "1.0"
+Version := "1.1"
 Title := "ROSE Mod Launcher v" Version
 StartingY :=	25
 Gap :=			35
@@ -2861,9 +2861,9 @@ Launcher_CleanOld() {
 }
 
 Launcher_ParseManifest(Text, Url) {
-    man := {Version: "", Base: "", Files: Map()}
+    man := {Version: "", BaseUrl: "", Files: Map()}
     b := RegExReplace(Url, "\?.*$")
-    man.Base := SubStr(b, 1, InStr(b, "/", , -1))
+    man.BaseUrl := SubStr(b, 1, InStr(b, "/", , -1))
     for line in StrSplit(Text, "`n", "`r") {
         line := Trim(line)
         if (line = "" || SubStr(line, 1, 1) = ";")
@@ -2873,9 +2873,9 @@ Launcher_ParseManifest(Text, Url) {
             continue
         }
         if RegExMatch(line, "i)^base\s*=\s*(.+)$", &v) {
-            man.Base := StrReplace(Trim(v[1]), " ", "%20")
-            if (SubStr(man.Base, -1) != "/")
-                man.Base .= "/"
+            man.BaseUrl := StrReplace(Trim(v[1]), " ", "%20")
+            if (SubStr(man.BaseUrl, -1) != "/")
+                man.BaseUrl .= "/"
             continue
         }
         p := StrSplit(line, "|", , 2)
@@ -2924,7 +2924,7 @@ Launcher_SelfUpdate(Quiet) {
         Mods_EnsureDir(tmp)
         ok := false
         try {
-            Download(man.Base Url_EncodePath(StrReplace(rel, "\", "/")) "?t=" A_Now A_MSec, tmp)
+            Download(man.BaseUrl Url_EncodePath(StrReplace(rel, "\", "/")) "?t=" A_Now A_MSec, tmp)
             ok := (Mods_Sha(tmp) = sha)
         }
         if !ok {
