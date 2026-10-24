@@ -1,4 +1,4 @@
-ROSE Mod Launcher v1.0
+ROSE Mod Launcher v1.2
 ======================
 A launcher for ROSE Online with the game's news, one-click auto-login
 buttons, a UI theme picker and a mods list. Built on ROSE Login Manager v1.9
@@ -43,6 +43,8 @@ Update Game  Patches the game right here - no Rednim window. The launcher
              Settings). START and login buttons wait for it to finish.
 UI Theme     Default (the game's own look) or any theme mod.
 Mods         Turn mods on and off, check for updates, open the mods folder.
+Server light Next to Client: green when the game server answers. "No reply"
+             only means it didn't answer the check - it may still be up.
 Login strip  Your auto-login buttons. Click one to log straight in.
 START        Opens the game normally, without logging in - the same way the
              official updater does.
@@ -130,6 +132,33 @@ To publish a new version: raise Version at the top of the launcher script
 and upload the changed files plus manifest.txt. Only a version number
 higher than the one someone has is offered to them.
 "Check for Launcher Update" in Settings checks straight away.
+
+
+ACCOUNTS AND SETTINGS SAFETY
+----------------------------
+- Before any change to your accounts (new, edit, delete, move, import) a
+  copy is saved in %AppData%\RLM\backups (the newest 30 are kept).
+  Settings > Recover lists them, so a deleted account can be added back.
+- Settings > Back Up Settings saves one zip (in Documents\ROSE Mod Launcher
+  Backups) with the game's settings and keybinds (rose.toml), the Steampunk
+  settings (sp_*.txt), which mods are on, and the launcher's settings,
+  clients and accounts. Restore Settings puts them back - close the game
+  first. Accounts only work again on the same PC and Windows user.
+
+
+LAUNCHER SKINS
+--------------
+A UI Theme mod can carry a "launcher" folder with its own versions of the
+files in Launcher Files plus a skin.ini of colours. While that theme is on,
+the launcher wears it (Steampunk turns it brass). Untick "Match the
+launcher's look to the UI theme" in Settings to keep the blue look.
+
+
+WHAT'S NEW NOTES
+----------------
+Launcher updates show their notes before you update (changes= lines in the
+launcher's manifest.txt). Mod updates show a "What's new" box afterwards,
+from Changes= in the mod's mod.ini (use \n for a new line).
 
 
 CHANGING THE ICON

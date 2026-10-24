@@ -1,5 +1,11 @@
 ; Update list for ROSE Mod Launcher. Upload this next to the launcher files.
-version=1.1
+version=1.2
+changes=Delete now names the account, and your accounts are backed up before every change (Settings > Recover lists the backups)
+changes=Back Up Settings / Restore Settings in Settings: game settings, keybinds, Steampunk settings and launcher settings in one zip
+changes=A server status light next to Client
+changes=Update notes like these, for the launcher and for mods
+changes=The Mods window warns when two mods change the same file
+changes=The launcher can take on the look of your UI theme (Steampunk turns it brass)
 9d1b6fbd446c8175a0907a1916405691d69275bb|Launcher Files/ROSE Mod Launcher.ico
 f169f58c787fe209c5a1018279d60df40e94c7ad|Launcher Files/banner.png
 c3307a299a063043880fe5770828ce8cbe42913e|Launcher Files/bg.png
@@ -23,5 +29,5 @@ b7a22308a0ab0236f374b23b4b33a3e886282bac|Launcher Files/nav_website_h.png
 f6bb9b2686385c0b84243eb51349eb8c9203fc82|Launcher Files/nav_website_n.png
 4a36f3fb1d9a9f432d1844ce80ad7ad25a0def58|Launcher Files/start_h.png
 3e5b38d1ccc0b5c2bd13a0b364f0404b32887a7f|Launcher Files/start_n.png
-a4ba764c6817235d1a5b07dcb31cec9e949fbcba|ROSE Mod Launcher.ahk
-5e98ec675c46d9ac00da0aa1e3ae93ec292be1a5|ROSE Mod Launcher.exe
+0db0b309c61b5234a4a962731c64020b0e1d8165|ROSE Mod Launcher.ahk
+abf35916352805b93d5a5514fcfe2f0c73e2a884|ROSE Mod Launcher.exe

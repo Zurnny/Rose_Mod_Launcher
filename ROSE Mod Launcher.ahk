@@ -856,7 +856,7 @@ return TextBackgroundBrush
 }
 return DllCall("user32\CallWindowProc", "Ptr", WindowProcOld, "Ptr", hwnd, "UInt", uMsg, "Ptr", wParam, "Ptr", lParam)
 }
-Version := "1.1"
+Version := "1.2"
 Title := "ROSE Mod Launcher v" Version
 StartingY :=	25
 Gap :=			35
@@ -959,6 +959,7 @@ DecryptData(Data, Password) {
 return Decrypt.String("AES", "CBC", Data, RLM_Key, Password)
 }
 ImportLogins(*) {
+Accounts_Backup()
 ImportPath := FileSelect(, , "Select the exported login file to import.", "RLM Export Files (*.export)")
 if ImportPath = ""
 return
@@ -1049,6 +1050,7 @@ EditLogin.Destroy
 EditModeToggle()
 }
 NewLogin_handler(ctrl, *) {
+Accounts_Backup()
 output := ctrl.gui.submit()
 EmailTrimmed := Trim(output.EA)
 if HasVal(LoginEmail, EmailTrimmed) {
@@ -1436,6 +1438,7 @@ FileCopy "mods\*.xml", "3ddata\control\xml", 1
 }
 }
 EditFromDataFile(EditTarget, ctrl, *) {
+Accounts_Backup()
 output := ctrl.gui.submit()
 if output.PW != "" {
 LoginData[EditTarget] := EncryptPassword(output.PW)
@@ -1472,8 +1475,9 @@ Try EditLogin.Destroy
 }
 }
 RemoveFromDataFile(Remove, *) {
-Result := MsgBox("Do you want to delete " Remove,, "YesNo Default2")
+Result := MsgBox("Delete this auto-login button?`n`n" (LoginDisplay.Has(Remove) ? LoginDisplay[Remove] "`n" : "") Remove "`n`nA backup of your accounts is kept first, so it can be brought back with Settings > Recover.", Title " - Delete account", "YesNo Icon! Default2")
 if Result = "Yes" {
+Accounts_Backup()
 if FileExist(DataPathCfg)
 Loop Read DataPathCfg {
 if InStr(A_LoopReadLine,'"|"' Remove '","',,1)
@@ -1607,6 +1611,9 @@ Launcher_InitGlobals() {
 }
 
 Asset(Name) {
+    global SkinDir
+    if (IsSet(SkinDir) && SkinDir != "" && FileExist(SkinDir Name))
+        return SkinDir Name
     return A_ScriptDir "\Launcher Files\" Name
 }
 
@@ -1628,6 +1635,8 @@ BuildUI() {
     global Main, DDL, ThemeDDL, ModsBtn, NewsPic, NewsCap, NewsRows, NewsDates, StatusText, Prog
     global AcctSlots, AcctDots, AcctEmpty, AcctPrev, AcctNext, HoverMap, HoverLast, MainX, MainY
     static Started := false
+    global ServerText
+    Skin_Resolve()
     if !FileExist(Asset("bg.png")) {
         MsgBox("The 'Launcher Files' folder with the launcher art is missing.`n`nPut it next to " A_ScriptName " and start it again.", Title)
         ExitApp
@@ -1649,7 +1658,7 @@ BuildUI() {
 
     Main := Gui("-Caption +Border", Title)
     Main.OnEvent("Close", (*) => Main_Exit())
-    Main.BackColor := "EAEEF6"
+    Main.BackColor := Skin_C("Face")
     Main.MarginX := 0
     Main.MarginY := 0
     Main.SetFont("s9", "Segoe UI")
@@ -1663,9 +1672,9 @@ BuildUI() {
         HoverMap[p.Hwnd] := Pic_Hover(p, "nav_" key)
         x += 106
     }
-    Main.SetFont("s9 bold c1E3C78")
-    Main.Add("Text", "x548 y14 w156 h18 BackgroundEAEEF6", "ROSE Mod Launcher")
-    Main.SetFont("s9 norm cEBF2FF")
+    Main.SetFont("s9 bold c" Skin_C("Title") "")
+    Main.Add("Text", "x548 y14 w156 h18 Background" Skin_C("Face") "", "ROSE Mod Launcher")
+    Main.SetFont("s9 norm c" Skin_C("Text") "")
     p := Main.Add("Picture", "x708 y11 w22 h22", Asset("min_n.png"))
     p.OnEvent("Click", (*) => Main.Minimize())
     HoverMap[p.Hwnd] := Pic_Hover(p, "min")
@@ -1676,40 +1685,42 @@ BuildUI() {
     ; --- news picture and caption ---------------------------------------------
     NewsPic := Main.Add("Picture", "x30 y62 w444 h250", Asset("banner.png"))
     NewsPic.OnEvent("Click", (*) => News_Open())
-    Main.SetFont("s10 bold cB4D2FA")
-    t := Main.Add("Text", "x32 y319 w18 h20 Center Background14305C", "<")
+    Main.SetFont("s10 bold c" Skin_C("Arrow") "")
+    t := Main.Add("Text", "x32 y319 w18 h20 Center Background" Skin_C("Panel") "", "<")
     t.OnEvent("Click", (*) => News_Step(-1))
-    HoverMap[t.Hwnd] := Text_Hover(t, "B4D2FA", "FFFF90")
-    t := Main.Add("Text", "x454 y319 w18 h20 Center Background14305C", ">")
+    HoverMap[t.Hwnd] := Text_Hover(t, Skin_C("Arrow"), Skin_C("Hot"))
+    t := Main.Add("Text", "x454 y319 w18 h20 Center Background" Skin_C("Panel") "", ">")
     t.OnEvent("Click", (*) => News_Step(1))
-    HoverMap[t.Hwnd] := Text_Hover(t, "B4D2FA", "FFFF90")
-    Main.SetFont("s9 norm cFFFF96")
-    NewsCap := Main.Add("Text", "x54 y321 w396 h18 Center Background14305C 0x4000", "Loading news...")
+    HoverMap[t.Hwnd] := Text_Hover(t, Skin_C("Arrow"), Skin_C("Hot"))
+    Main.SetFont("s9 norm c" Skin_C("Caption") "")
+    NewsCap := Main.Add("Text", "x54 y321 w396 h18 Center Background" Skin_C("Panel") " 0x4000", "Loading news...")
     NewsCap.OnEvent("Click", (*) => News_Open())
-    HoverMap[NewsCap.Hwnd] := Text_Hover(NewsCap, "FFFF96", "FFFFFF")
+    HoverMap[NewsCap.Hwnd] := Text_Hover(NewsCap, Skin_C("Caption"), Skin_C("Head"))
 
     ; --- notices ----------------------------------------------------------------
-    Main.SetFont("s10 bold cFFFFFF")
-    Main.Add("Text", "x504 y61 w140 h20 Background14305C", "Notices")
-    Main.SetFont("s8 norm c96C8FF")
-    t := Main.Add("Text", "x660 y64 w70 h16 Right Background14305C", "view all")
+    Main.SetFont("s10 bold c" Skin_C("Head") "")
+    Main.Add("Text", "x504 y61 w140 h20 Background" Skin_C("Panel") "", "Notices")
+    Main.SetFont("s8 norm c" Skin_C("Link") "")
+    t := Main.Add("Text", "x660 y64 w70 h16 Right Background" Skin_C("Panel") "", "view all")
     t.OnEvent("Click", (*) => Run(Launcher_Url("news")))
-    HoverMap[t.Hwnd] := Text_Hover(t, "96C8FF", "FFFFFF")
+    HoverMap[t.Hwnd] := Text_Hover(t, Skin_C("Link"), Skin_C("Head"))
     Loop 5 {
         y := 88 + (A_Index - 1) * 22
-        Main.SetFont("s8 norm cEBF2FF")
-        r := Main.Add("Text", "x504 y" y " w176 h17 Background14305C 0x4000", "")
+        Main.SetFont("s8 norm c" Skin_C("Text") "")
+        r := Main.Add("Text", "x504 y" y " w176 h17 Background" Skin_C("Panel") " 0x4000", "")
         r.OnEvent("Click", News_RowClick.Bind(A_Index))
         HoverMap[r.Hwnd] := News_RowHover(A_Index)
         NewsRows.Push(r)
-        Main.SetFont("s8 norm c96B4DC")
-        NewsDates.Push(Main.Add("Text", "x682 y" y " w48 h17 Right Background14305C", ""))
+        Main.SetFont("s8 norm c" Skin_C("Dim") "")
+        NewsDates.Push(Main.Add("Text", "x682 y" y " w48 h17 Right Background" Skin_C("Panel") "", ""))
     }
 
     ; --- client, theme, mods -----------------------------------------------------
-    Main.SetFont("s9 bold cFFFFFF")
-    Main.Add("Text", "x504 y209 w200 h18 Background14305C", "Client")
-    Main.Add("Text", "x504 y257 w200 h18 Background14305C", "UI Theme")
+    Main.SetFont("s9 bold c" Skin_C("Head") "")
+    Main.Add("Text", "x504 y209 w200 h18 Background" Skin_C("Panel") "", "Client")
+    Main.Add("Text", "x504 y257 w200 h18 Background" Skin_C("Panel") "", "UI Theme")
+    Main.SetFont("s8 norm c" Skin_C("Dim") "")
+    ServerText := Main.Add("Text", "x584 y211 w146 h16 Right Background" Skin_C("Panel") "", "")
     Main.SetFont("s9 norm c000000")
     DDL := Main.Add("DropDownList", "x504 y228 w226 vTROSEChoice", TROSEDisplay)
     DDL.Add(["------------------------------", "Add/Remove ROSE"])
@@ -1725,26 +1736,26 @@ BuildUI() {
         col := Mod(A_Index - 1, 4), row := (A_Index - 1) // 4
         x := 46 + col * 166, y := 374 + row * 22
         AcctDots.Push(Main.Add("Picture", "x" (x - 16) " y" (y + 3) " w12 h12", Asset("dot_off.png")))
-        Main.SetFont("s9 norm cEBF2FF")
-        s := Main.Add("Text", "x" x " y" y " w146 h18 Background122A54 0x4000", "")
+        Main.SetFont("s9 norm c" Skin_C("Text") "")
+        s := Main.Add("Text", "x" x " y" y " w146 h18 Background" Skin_C("Strip") " 0x4000", "")
         s.OnEvent("Click", Acct_Click.Bind(A_Index))
         HoverMap[s.Hwnd] := Acct_Hover(A_Index)
         AcctSlots.Push(s)
     }
-    Main.SetFont("s9 norm c96B4DC")
-    AcctEmpty := Main.Add("Text", "x40 y384 w600 h18 Background122A54", "No auto-login buttons yet. Press Settings at the top to add your accounts.")
-    Main.SetFont("s10 bold cB4D2FA")
-    AcctPrev := Main.Add("Text", "x698 y383 w16 h20 Center Background122A54", "<")
+    Main.SetFont("s9 norm c" Skin_C("Dim") "")
+    AcctEmpty := Main.Add("Text", "x40 y384 w600 h18 Background" Skin_C("Strip") "", "No auto-login buttons yet. Press Settings at the top to add your accounts.")
+    Main.SetFont("s10 bold c" Skin_C("Arrow") "")
+    AcctPrev := Main.Add("Text", "x698 y383 w16 h20 Center Background" Skin_C("Strip") "", "<")
     AcctPrev.OnEvent("Click", (*) => Acct_Page(-1))
-    HoverMap[AcctPrev.Hwnd] := Text_Hover(AcctPrev, "B4D2FA", "FFFF90")
-    AcctNext := Main.Add("Text", "x716 y383 w16 h20 Center Background122A54", ">")
+    HoverMap[AcctPrev.Hwnd] := Text_Hover(AcctPrev, Skin_C("Arrow"), Skin_C("Hot"))
+    AcctNext := Main.Add("Text", "x716 y383 w16 h20 Center Background" Skin_C("Strip") "", ">")
     AcctNext.OnEvent("Click", (*) => Acct_Page(1))
-    HoverMap[AcctNext.Hwnd] := Text_Hover(AcctNext, "B4D2FA", "FFFF90")
+    HoverMap[AcctNext.Hwnd] := Text_Hover(AcctNext, Skin_C("Arrow"), Skin_C("Hot"))
 
     ; --- bottom row -------------------------------------------------------------------
-    Prog := Main.Add("Progress", "x11 y445 w628 h16 c46AAF0 BackgroundFAFCFF Range0-100", 0)
-    Main.SetFont("s9 norm c34405A")
-    StatusText := Main.Add("Text", "x12 y468 w628 h18 BackgroundEAEEF6 0x4000", "Ready")
+    Prog := Main.Add("Progress", "x11 y445 w628 h16 c" Skin_C("Bar") " Background" Skin_C("BarBg") " Range0-100", 0)
+    Main.SetFont("s9 norm c" Skin_C("Status") "")
+    StatusText := Main.Add("Text", "x12 y468 w628 h18 Background" Skin_C("Face") " 0x4000", "Ready")
     p := Main.Add("Picture", "x650 y438 w82 h54", Asset("start_n.png"))
     p.OnEvent("Click", Start_Click)
     HoverMap[p.Hwnd] := Pic_Hover(p, "start")
@@ -1766,6 +1777,8 @@ BuildUI() {
         OnMessage(0x201, Main_LButton)
         SetTimer(Hover_Poll, 100)
         SetTimer(Launcher_Startup, -300)
+        SetTimer(() => Server_Check(), -4000)
+        SetTimer(Server_Check, 120000)
     }
 }
 
@@ -1906,7 +1919,7 @@ Acct_Fill() {
         if (i <= total) {
             e := LoginEmail[i]
             s.Text := (DisplayMode = 1 ? e : LoginDisplay[e]) SetOverRideMarker(e)
-            s.SetFont("norm cEBF2FF")
+            s.SetFont("norm c" Skin_C("Text") "")
             s.Visible := true
             AcctDots[k].Value := Asset("dot_off.png")
             AcctDots[k].Visible := true
@@ -1940,7 +1953,7 @@ Acct_Hover(Slot) {
 Acct_Light(Slot, On) {
     global AcctSlots, AcctDots
     try {
-        AcctSlots[Slot].SetFont(On ? "bold cFFFF96" : "norm cEBF2FF")
+        AcctSlots[Slot].SetFont(On ? "bold c" Skin_C("Caption") "" : "norm c" Skin_C("Text") "")
         AcctDots[Slot].Value := Asset(On ? "dot_on.png" : "dot_off.png")
     }
 }
@@ -1976,18 +1989,23 @@ SettingsUI_Show(*) {
     SetUI.Add("Button", "x540 y116 w110 h28", "Delete").OnEvent("Click", (*) => SettingsUI_Delete())
     SetUI.Add("Button", "x540 y164 w110 h28", "Move Up").OnEvent("Click", (*) => SettingsUI_Move(-1))
     SetUI.Add("Button", "x540 y198 w110 h28", "Move Down").OnEvent("Click", (*) => SettingsUI_Move(1))
-    SetUI.Add("Button", "x540 y246 w110 h28", "Recover...").OnEvent("Click", Recover_Show)
-    chk := SetUI.Add("CheckBox", "x10 y290 w310", "Show emails on the buttons instead of names")
+    SetUI.Add("Button", "x540 y232 w110 h28", "Recover...").OnEvent("Click", Recover_Show)
+    SetUI.Add("Button", "x540 y266 w110 h28", "Back Up Settings").OnEvent("Click", Backup_Make)
+    SetUI.Add("Button", "x540 y300 w110 h28", "Restore Settings").OnEvent("Click", Backup_Restore)
+    chk := SetUI.Add("CheckBox", "x10 y288 w520", "Show emails on the buttons instead of names")
     chk.Value := DisplayMode
     chk.OnEvent("Click", SettingsUI_Emails)
-    chk2 := SetUI.Add("CheckBox", "x330 y290 w320", "Update the game when the launcher opens")
+    chk2 := SetUI.Add("CheckBox", "x10 y308 w520", "Update the game when the launcher opens")
     chk2.Value := Patch_AutoOn()
     chk2.OnEvent("Click", (c, *) => IniWrite(c.Value, SettingPathCfg, "Launcher", "AutoPatch"))
-    SetUI.Add("Text", "x10 y312 w520", "Edit... also sets which client an account opens. A * after a name means it has its own client.")
-    SetUI.Add("Button", "x10 y340 w140 h28", "More options...").OnEvent("Click", (*) => BuildMoreUI())
-    SetUI.Add("Button", "x155 y340 w185 h28", "Check for Launcher Update").OnEvent("Click", (*) => Launcher_SelfUpdate(false))
-    SetUI.Add("Button", "x345 y340 w185 h28", "Make Launcher Update List").OnEvent("Click", ModsUI_MakeLauncherManifest)
-    SetUI.Add("Button", "x540 y340 w110 h28", "Close").OnEvent("Click", (*) => SetUI.Destroy())
+    chk3 := SetUI.Add("CheckBox", "x10 y328 w520", "Match the launcher's look to the UI theme")
+    chk3.Value := (IniRead(SettingPathCfg, "Launcher", "MatchSkin", "1") = "1")
+    chk3.OnEvent("Click", (c, *) => (IniWrite(c.Value, SettingPathCfg, "Launcher", "MatchSkin"), SetTimer(Launcher_Reskin, -100)))
+    SetUI.Add("Text", "x10 y350 w520", "Edit... also sets which client an account opens. A * after a name means it has its own client.")
+    SetUI.Add("Button", "x10 y376 w140 h28", "More options...").OnEvent("Click", (*) => BuildMoreUI())
+    SetUI.Add("Button", "x155 y376 w185 h28", "Check for Launcher Update").OnEvent("Click", (*) => Launcher_SelfUpdate(false))
+    SetUI.Add("Button", "x345 y376 w185 h28", "Make Launcher Update List").OnEvent("Click", ModsUI_MakeLauncherManifest)
+    SetUI.Add("Button", "x540 y376 w110 h28", "Close").OnEvent("Click", (*) => SetUI.Destroy())
     If DarkMode = 2
         DarkMode_Setter(SetUI)
     SettingsUI_Fill()
@@ -2042,6 +2060,7 @@ SettingsUI_Emails(Ctrl, *) {
 
 SettingsUI_Move(Dir) {
     global SetLV
+    Accounts_Backup()
     row := 0
     try row := SetLV.GetNext(0)
     if !row
@@ -2302,7 +2321,7 @@ News_Show(I) {
 
 News_RowColor(K, Hot) {
     global NewsRows, NewsIdx
-    try NewsRows[K].SetFont(Hot ? "cFFFFFF underline" : (K = NewsIdx ? "cFFFF96 norm" : "cEBF2FF norm"))
+    try NewsRows[K].SetFont(Hot ? "c" Skin_C("Head") " underline" : (K = NewsIdx ? "c" Skin_C("Caption") " norm" : "c" Skin_C("Text") " norm"))
 }
 
 News_RowHover(K) {
@@ -2365,7 +2384,13 @@ Pic_Fit(Pic, File, X, Y, W, H) {
 ;  Mods
 ; -----------------------------------------------------------------------------
 Mods_Game() {
-    g := CurrentTROSEPath
+    global CurrentTROSEPath
+    if (IsSet(CurrentTROSEPath) && CurrentTROSEPath != "") {
+        g := CurrentTROSEPath
+    } else {
+        n := IniRead(SettingPathCfg, "RLM", "CurrentClient", "")
+        g := TROSEPath.Has(n) ? TROSEPath[n] : (TROSEDisplay.Length ? TROSEPath[TROSEDisplay[1]] : "")
+    }
     if (SubStr(g, -1) != "\")
         g .= "\"
     return g
@@ -2402,6 +2427,7 @@ Mods_Scan(Game) {
         m.Group := IniRead(ini, "Mod", "Group", "")
         m.Description := StrReplace(IniRead(ini, "Mod", "Description", ""), "\n", "`n")
         m.UpdateUrl := IniRead(ini, "Mod", "UpdateUrl", "")
+        m.Changes := StrReplace(IniRead(ini, "Mod", "Changes", ""), "\n", "`n")
         m.Priority := Mods_Num(IniRead(ini, "Mod", "Priority", ""), m.Group = "UI Theme" ? 10 : 50)
         m.Enabled := (IniRead(state, "Enabled", folder, "0") = "1")
         list.Push(m)
@@ -2628,6 +2654,7 @@ ThemeDDL_Change(Ctrl, *) {
     Mods_ApplyNow(g)
     ModsRow_Refresh()
     ModsUI_Fill()
+    SetTimer(Launcher_Reskin, -100)
 }
 
 ; --- Mods window -----------------------------------------------------------------
@@ -2676,6 +2703,9 @@ ModsUI_Fill() {
         ModsLV.ModifyCol(3, 110)
         ModsLV.ModifyCol(4, 130)
         ModsLV.ModifyCol(5, 85)
+        clash := Mods_Clashes(ModsList)
+        if (clash != "")
+            ModsInfo.Text := clash
     }
     ModsBusy := false
 }
@@ -2704,7 +2734,7 @@ ModsLV_Select(LV, Item, Selected) {
     if (!Selected || Item < 1 || Item > ModsList.Length)
         return
     m := ModsList[Item]
-    ModsInfo.Text := m.Name (m.Version != "" ? " v" m.Version : "") (m.Author != "" ? " by " m.Author : "") "`n" (m.Description != "" ? m.Description : "(no description)")
+    ModsInfo.Text := m.Name (m.Version != "" ? " v" m.Version : "") (m.Author != "" ? " by " m.Author : "") "`n" (m.Description != "" ? m.Description : "(no description)") (m.Changes != "" ? "`nNew in this version: " StrReplace(m.Changes, "`n", " / ") : "")
 }
 
 ModsUI_Apply(*) {
@@ -2715,6 +2745,7 @@ ModsUI_Apply(*) {
     ModsDirty := false
     ModsUI_Fill()
     ModsRow_Refresh()
+    SetTimer(Launcher_Reskin, -100)
 }
 
 ModsUI_AllOff(*) {
@@ -2861,7 +2892,7 @@ Launcher_CleanOld() {
 }
 
 Launcher_ParseManifest(Text, Url) {
-    man := {Version: "", BaseUrl: "", Files: Map()}
+    man := {Version: "", BaseUrl: "", Files: Map(), Changes: ""}
     b := RegExReplace(Url, "\?.*$")
     man.BaseUrl := SubStr(b, 1, InStr(b, "/", , -1))
     for line in StrSplit(Text, "`n", "`r") {
@@ -2870,6 +2901,10 @@ Launcher_ParseManifest(Text, Url) {
             continue
         if RegExMatch(line, "i)^version\s*=\s*(.*)$", &v) {
             man.Version := Trim(v[1])
+            continue
+        }
+        if RegExMatch(line, "i)^changes\s*=\s*(.*)$", &v) {
+            man.Changes .= "- " Trim(v[1]) "`n"
             continue
         }
         if RegExMatch(line, "i)^base\s*=\s*(.+)$", &v) {
@@ -2907,7 +2942,7 @@ Launcher_SelfUpdate(Quiet) {
             MsgBox("The launcher is up to date (v" Version ").", Title)
         return
     }
-    r := MsgBox("ROSE Mod Launcher v" man.Version " is available (you have v" Version ").`n`nUpdate now? The launcher will restart.", Title, "YesNo")
+    r := MsgBox("ROSE Mod Launcher v" man.Version " is available (you have v" Version ")." (man.Changes != "" ? "`n`nWhat's new:`n" RTrim(man.Changes, "`n") : "") "`n`nUpdate now? The launcher will restart.", Title, "YesNo")
     if (r != "Yes") {
         Status_Set("Launcher update v" man.Version " skipped")
         return
@@ -2973,6 +3008,7 @@ Mods_UpdateAll(Quiet) {
     list := Mods_Scan(g)
     report := []
     failed := []
+    whatsnew := ""
     reapply := false
     for m in list {
         if (m.UpdateUrl = "")
@@ -2984,6 +3020,8 @@ Mods_UpdateAll(Quiet) {
         } else if (n > 0) {
             v := (m.HasOwnProp("NewVersion") && m.NewVersion != "") ? " to v" m.NewVersion : ""
             report.Push(m.Name " updated" v " (" n " file" (n = 1 ? "" : "s") ")")
+            ch := StrReplace(IniRead(m.Path "mod.ini", "Mod", "Changes", ""), "\n", "`n")
+            whatsnew .= m.Name v ":`n" (ch != "" ? ch : "(no notes)") "`n`n"
             if m.Enabled
                 reapply := true
         }
@@ -2998,6 +3036,8 @@ Mods_UpdateAll(Quiet) {
     if (msg = "")
         msg := failed.Length ? "Ready (could not check " failed[1] " for updates)" : "Ready"
     Status_Set(msg)
+    if (whatsnew != "")
+        MsgBox("What's new`n`n" RTrim(whatsnew, "`n"), Title " - What's new", "T30")
     if !Quiet {
         MsgBox((report.Length ? msg : "All mods with automatic updates are up to date.") (failed.Length ? "`n`nCould not check: " failed.Length " mod(s). Check the UpdateUrl in their mod.ini." : ""), Title " - Mods")
     }
@@ -3206,6 +3246,7 @@ Accounts_Dedupe() {
     }
     if (dropped = 0)
         return
+    Accounts_Backup()
     try FileCopy DataPathCfg, DataPathCfg ".before-dedupe", 1
     FileDelete DataPathCfg
     FileAppend keep, DataPathCfg
@@ -3218,7 +3259,7 @@ Accounts_Dedupe() {
 ;  to this Windows user, so only copies made on this PC can be read.
 ; -----------------------------------------------------------------------------
 Recover_Candidates() {
-    list := []
+    list := Accounts_Backups()
     seen := Map()
     dirs := [CfgDataPath, A_Desktop "\", A_MyDocuments "\", EnvGet("USERPROFILE") "\Downloads\"]
     for d in dirs {
@@ -3320,6 +3361,7 @@ Recover_Add(*) {
     global RecLV, RecRows, Main
     added := 0
     row := 0
+    Accounts_Backup()
     while (row := RecLV.GetNext(row, "Checked")) {
         r := RecRows[row]
         if (r.Here || !r.Readable)
@@ -3332,7 +3374,6 @@ Recover_Add(*) {
         MsgBox("Tick the accounts marked 'Missing' first.", Title)
         return
     }
-    try FileCopy DataPathCfg, DataPathCfg ".backup", 1
     Main.Destroy()
     ReadCfg()
     BuildUI()
@@ -3359,4 +3400,291 @@ Recover_ShowPw(*) {
         SetTimer(() => (A_Clipboard := ""), -60000)
     }
     pw := ""
+}
+
+; -----------------------------------------------------------------------------
+;  Account backups: a copy of data.cfg goes to %AppData%\RLM\backups\ before
+;  every change (new, edit, delete, move, import, recover). The newest 30 are
+;  kept, and Settings > Recover lists them.
+; -----------------------------------------------------------------------------
+Accounts_BackupDir() {
+    d := CfgDataPath "backups\"
+    if !DirExist(d)
+        DirCreate d
+    return d
+}
+
+Accounts_Backups() {
+    names := ""
+    Loop Files Accounts_BackupDir() "accounts-*.cfg"
+        names .= A_LoopFileName "`n"
+    names := Sort(RTrim(names, "`n"), "R")
+    list := []
+    for n in StrSplit(names, "`n") {
+        if (n != "")
+            list.Push(Accounts_BackupDir() n)
+    }
+    return list
+}
+
+Accounts_Backup() {
+    if !FileExist(DataPathCfg)
+        return
+    try {
+        now := FileRead(DataPathCfg)
+        list := Accounts_Backups()
+        if (list.Length && FileRead(list[1]) == now)
+            return
+        FileCopy DataPathCfg, Accounts_BackupDir() "accounts-" FormatTime(, "yyyyMMdd-HHmmss") ".cfg", 1
+        list := Accounts_Backups()
+        while (list.Length > 30)
+            FileDelete list.Pop()
+    }
+}
+
+; -----------------------------------------------------------------------------
+;  Settings backup / restore: one zip with the game's own settings files
+;  (rose.toml and any other .toml next to it, the Steampunk sp_*.txt files),
+;  which mods are on, and the launcher's settings, clients and accounts.
+;  Accounts only work again on this PC under the same Windows user.
+; -----------------------------------------------------------------------------
+Backup_Stage() {
+    st := A_Temp "\RML-settings-backup\"
+    try DirDelete st, 1
+    DirCreate st "game"
+    DirCreate st "launcher"
+    g := Mods_Game()
+    n := 0
+    for pat in ["*.toml", "sp_*.txt", "sp_*.cache"] {
+        Loop Files g pat, "F" {
+            FileCopy A_LoopFileFullPath, st "game\" A_LoopFileName, 1
+            n++
+        }
+    }
+    if FileExist(Mods_Dir(g) "_state.ini") {
+        DirCreate st "game\Launcher Mods"
+        FileCopy Mods_Dir(g) "_state.ini", st "game\Launcher Mods\_state.ini", 1
+        n++
+    }
+    for f in [SettingPathCfg, TROSEPathCfg, DataPathCfg] {
+        if FileExist(f) {
+            SplitPath f, &name
+            FileCopy f, st "launcher\" name, 1
+            n++
+        }
+    }
+    FileAppend "ROSE Mod Launcher settings backup`r`nMade " FormatTime(, "yyyy-MM-dd HH:mm") " from " g "`r`n`r`ngame\     goes into the game folder`r`nlauncher\ goes into %AppData%\RLM`r`n", st "README.txt"
+    return [st, n]
+}
+
+Backup_Make(*) {
+    dir := A_MyDocuments "\ROSE Mod Launcher Backups"
+    if !DirExist(dir)
+        DirCreate dir
+    def := dir "\ROSE settings " FormatTime(, "yyyy-MM-dd HHmm") ".zip"
+    out := FileSelect("S16", def, "Save your settings backup", "Zip files (*.zip)")
+    if (out = "")
+        return
+    if !RegExMatch(out, "i)\.zip$")
+        out .= ".zip"
+    try {
+        r := Backup_Stage()
+        try FileDelete out
+        RunWait('powershell -NoProfile -ExecutionPolicy Bypass -Command "Compress-Archive -Path ' "'" r[1] "*' -DestinationPath '" out "' -Force" '"', , "Hide")
+        if !FileExist(out)
+            throw Error("the zip was not made")
+        MsgBox("Backed up " r[2] " settings files to:`n" out, Title)
+    } catch as e {
+        MsgBox("The backup could not be made: " e.Message, Title)
+    }
+}
+
+Backup_Restore(*) {
+    f := FileSelect(1, A_MyDocuments "\ROSE Mod Launcher Backups", "Pick a settings backup to restore", "Zip files (*.zip)")
+    if (f = "")
+        return
+    if ProcessExist(CurrentTROSE) {
+        MsgBox("Close ROSE first - it saves its settings when it closes and would undo the restore.", Title)
+        return
+    }
+    if (MsgBox("Restore the settings in this backup?`n" f "`n`nYour current settings files are replaced (your current accounts are backed up first).", Title, "YesNo Icon?") != "Yes")
+        return
+    st := A_Temp "\RML-settings-restore\"
+    try DirDelete st, 1
+    try {
+        RunWait('powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -Path ' "'" f "' -DestinationPath '" st "' -Force" '"', , "Hide")
+        if !DirExist(st "game") && !DirExist(st "launcher")
+            throw Error("that zip is not a ROSE Mod Launcher settings backup")
+        Accounts_Backup()
+        n := 0
+        g := Mods_Game()
+        Loop Files st "game\*", "FR" {
+            rel := SubStr(A_LoopFileFullPath, StrLen(st "game\") + 1)
+            Mods_EnsureDir(g rel)
+            FileCopy A_LoopFileFullPath, g rel, 1
+            n++
+        }
+        Loop Files st "launcher\*", "F" {
+            FileCopy A_LoopFileFullPath, CfgDataPath A_LoopFileName, 1
+            n++
+        }
+        try DirDelete st, 1
+        MsgBox("Restored " n " settings files. The launcher will now restart.", Title)
+        Reload
+    } catch as e {
+        MsgBox("The restore did not finish: " e.Message, Title)
+    }
+}
+
+; -----------------------------------------------------------------------------
+;  Server status light next to "Client": a ping, then a quick connection to
+;  the classic ROSE login port. No answer to either shows "no reply" - the
+;  server may still be up and just ignore these checks.
+; -----------------------------------------------------------------------------
+Server_TcpOk(Host, Port, TimeoutMs := 1500) {
+    static Started := false
+    if !Started {
+        wsa := Buffer(408, 0)
+        if (DllCall("ws2_32\WSAStartup", "UShort", 0x0202, "Ptr", wsa) != 0)
+            return false
+        Started := true
+    }
+    hints := Buffer(48, 0)
+    NumPut("Int", 2, hints, 4)
+    NumPut("Int", 1, hints, 8)
+    NumPut("Int", 6, hints, 12)
+    res := 0
+    if (DllCall("ws2_32\GetAddrInfoW", "Str", Host, "Str", String(Port), "Ptr", hints, "Ptr*", &res) != 0)
+        return false
+    ok := false
+    sock := DllCall("ws2_32\socket", "Int", 2, "Int", 1, "Int", 6, "Ptr")
+    if (sock != -1) {
+        mode := 1
+        DllCall("ws2_32\ioctlsocket", "Ptr", sock, "Int", 0x8004667E, "UInt*", &mode)
+        DllCall("ws2_32\connect", "Ptr", sock, "Ptr", NumGet(res, 32, "Ptr"), "Int", NumGet(res, 16, "UPtr"))
+        wr := Buffer(520, 0)
+        ex := Buffer(520, 0)
+        NumPut("UInt", 1, wr, 0)
+        NumPut("Ptr", sock, wr, 8)
+        NumPut("UInt", 1, ex, 0)
+        NumPut("Ptr", sock, ex, 8)
+        tv := Buffer(8, 0)
+        NumPut("Int", TimeoutMs // 1000, tv, 0)
+        NumPut("Int", Mod(TimeoutMs, 1000) * 1000, tv, 4)
+        n := DllCall("ws2_32\select", "Int", 0, "Ptr", 0, "Ptr", wr, "Ptr", ex, "Ptr", tv)
+        if (n > 0 && NumGet(wr, 0, "UInt") = 1)
+            ok := true
+        DllCall("ws2_32\closesocket", "Ptr", sock)
+    }
+    DllCall("ws2_32\FreeAddrInfoW", "Ptr", res)
+    return ok
+}
+
+Server_Check() {
+    global ServerText, Main
+    if !IsSet(ServerText)
+        return
+    try {
+        if (WinGetMinMax(Main.Hwnd) = -1)
+            return
+    }
+    host := "connect.roseonlinegame.com"
+    ms := -1
+    try {
+        for p in ComObjGet("winmgmts:").ExecQuery("Select StatusCode, ResponseTime From Win32_PingStatus Where Address='" host "' AND Timeout=1500") {
+            if (p.StatusCode = 0)
+                ms := p.ResponseTime
+        }
+    }
+    up := (ms >= 0)
+    if !up {
+        try up := Server_TcpOk(host, 29000)
+    }
+    try {
+        if up {
+            ServerText.Text := Chr(0x25CF) " Server online" (ms >= 0 ? " " ms " ms" : "")
+            ServerText.SetFont("c" Skin_C("Online"))
+        } else {
+            ServerText.Text := Chr(0x25CF) " Server: no reply"
+            ServerText.SetFont("c" Skin_C("NoReply"))
+        }
+    }
+}
+
+; -----------------------------------------------------------------------------
+;  Mod clashes: on-mods that change the same file. The higher priority wins.
+; -----------------------------------------------------------------------------
+Mods_Clashes(List) {
+    owner := Map()
+    count := Map()
+    winner := Map()
+    for m in List {
+        if !m.Enabled
+            continue
+        src := m.Path "files\"
+        Loop Files src "*", "FR" {
+            rel := SubStr(A_LoopFileFullPath, StrLen(src) + 1)
+            if owner.Has(rel) && owner[rel] != m.Name {
+                k := owner[rel] " and " m.Name
+                count[k] := (count.Has(k) ? count[k] : 0) + 1
+                winner[k] := m.Name
+            }
+            owner[rel] := m.Name
+        }
+    }
+    text := ""
+    for k, v in count
+        text .= "Heads-up: " k " both change " v " file" (v = 1 ? "" : "s") " - " winner[k] " wins (higher priority).`n"
+    return RTrim(text, "`n")
+}
+
+; -----------------------------------------------------------------------------
+;  Launcher skins: a UI Theme mod can carry a "launcher" folder with its own
+;  versions of the window art and a skin.ini of colours. While that theme is
+;  on (and Settings > "Match the launcher to the UI theme" is ticked), the
+;  launcher uses them; anything missing falls back to Launcher Files.
+; -----------------------------------------------------------------------------
+Skin_Defaults() {
+    return Map("Face", "EAEEF6", "Title", "1E3C78", "Text", "EBF2FF", "Head", "FFFFFF", "Arrow", "B4D2FA", "Hot", "FFFF90", "Caption", "FFFF96", "Panel", "14305C", "Strip", "122A54", "Link", "96C8FF", "Dim", "96B4DC", "Status", "34405A", "Bar", "46AAF0", "BarBg", "FAFCFF", "Online", "7CD870", "NoReply", "E8B850")
+}
+
+Skin_Resolve() {
+    global SkinDir, SkinColors
+    SkinDir := ""
+    SkinColors := Skin_Defaults()
+    if (IniRead(SettingPathCfg, "Launcher", "MatchSkin", "1") != "1")
+        return
+    try {
+        for m in Mods_Scan(Mods_Game()) {
+            if (m.Enabled && m.Group = "UI Theme" && DirExist(m.Path "launcher")) {
+                SkinDir := m.Path "launcher\"
+                break
+            }
+        }
+    }
+    if (SkinDir != "" && FileExist(SkinDir "skin.ini")) {
+        for k, v in Skin_Defaults() {
+            c := Trim(IniRead(SkinDir "skin.ini", "Colors", k, ""))
+            if RegExMatch(c, "i)^[0-9a-f]{6}$")
+                SkinColors[k] := c
+        }
+    }
+}
+
+Skin_C(Key) {
+    global SkinColors
+    if !IsSet(SkinColors)
+        SkinColors := Skin_Defaults()
+    return SkinColors.Has(Key) ? SkinColors[Key] : "FFFFFF"
+}
+
+Launcher_Reskin() {
+    global Main, SkinDir
+    old := IsSet(SkinDir) ? SkinDir : ""
+    Skin_Resolve()
+    if (SkinDir != old) {
+        try Main.Destroy()
+        BuildUI()
+        SetTimer(() => Server_Check(), -1500)
+    }
 }
