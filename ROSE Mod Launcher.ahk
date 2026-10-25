@@ -856,7 +856,7 @@ return TextBackgroundBrush
 }
 return DllCall("user32\CallWindowProc", "Ptr", WindowProcOld, "Ptr", hwnd, "UInt", uMsg, "Ptr", wParam, "Ptr", lParam)
 }
-Version := "1.2"
+Version := "1.3"
 Title := "ROSE Mod Launcher v" Version
 StartingY :=	25
 Gap :=			35
@@ -1727,9 +1727,8 @@ BuildUI() {
     DDL.OnEvent("Change", TROSEddl)
     ThemeDDL := Main.Add("DropDownList", "x504 y276 w226 vThemeChoice")
     ThemeDDL.OnEvent("Change", ThemeDDL_Change)
-    ModsBtn := Main.Add("Button", "x504 y311 w110 h30", "Mods")
-    ModsBtn.OnEvent("Click", (*) => ModsUI_Show())
-    Main.Add("Button", "x620 y311 w110 h30", "Update Game").OnEvent("Click", (*) => Patch_Run())
+    ModsBtn := Btn_Add(Main, 504, 311, 110, 30, "Mods", (*) => ModsUI_Show())
+    Btn_Add(Main, 620, 311, 110, 30, "Update Game", (*) => Patch_Run())
 
     ; --- auto-login strip ------------------------------------------------------------
     Loop 8 {
@@ -1834,6 +1833,39 @@ Hover_Poll() {
         if (x > -10000)
             MainX := x, MainY := y
     }
+}
+
+; Picture buttons drawn like the game's own buttons (btn_n/btn_h.png, skin-aware),
+; with the label on top. Returns the label, so .Text can change it.
+Btn_Add(G, X, Y, W, H, Label, Fn) {
+    global HoverMap
+    pic := G.Add("Picture", "x" X " y" Y " w" W " h" H, Asset("btn_n.png"))
+    G.SetFont("s9 bold c" Skin_C("BtnText"))
+    t := G.Add("Text", "x" X " y" Y " w" W " h" H " Center 0x200 BackgroundTrans", Label)
+    t.OnEvent("Click", Fn)
+    pic.OnEvent("Click", Fn)
+    hov := Btn_Hover(pic, t)
+    HoverMap[t.Hwnd] := hov
+    HoverMap[pic.Hwnd] := hov
+    return t
+}
+
+Btn_Hover(Pic, T) {
+    return (On) => Btn_Light(Pic, T, On)
+}
+
+Btn_Light(Pic, T, On) {
+    Pic.Value := Asset(On ? "btn_h.png" : "btn_n.png")
+    T.GetPos(&x, &y, &w, &h)
+    Area_Redraw(x, y, w, h)
+}
+
+Btn_SetText(T, Text) {
+    if (T.Text = Text)
+        return
+    T.Text := Text
+    T.GetPos(&x, &y, &w, &h)
+    Area_Redraw(x, y, w, h)
 }
 
 Pic_Hover(Pic, Key) {
@@ -2628,7 +2660,7 @@ ModsRow_Refresh() {
         ThemeDDL.Delete()
         ThemeDDL.Add(names)
         ThemeDDL.Value := pick
-        ModsBtn.Text := on ? "Mods (" on " on)" : "Mods"
+        Btn_SetText(ModsBtn, on ? "Mods (" on " on)" : "Mods")
     }
 }
 
@@ -3645,7 +3677,7 @@ Mods_Clashes(List) {
 ;  launcher uses them; anything missing falls back to Launcher Files.
 ; -----------------------------------------------------------------------------
 Skin_Defaults() {
-    return Map("Face", "EAEEF6", "Title", "1E3C78", "Text", "EBF2FF", "Head", "FFFFFF", "Arrow", "B4D2FA", "Hot", "FFFF90", "Caption", "FFFF96", "Panel", "14305C", "Strip", "122A54", "Link", "96C8FF", "Dim", "96B4DC", "Status", "34405A", "Bar", "46AAF0", "BarBg", "FAFCFF", "Online", "7CD870", "NoReply", "E8B850")
+    return Map("Face", "EAEEF6", "Title", "1E3C78", "Text", "EBF2FF", "Head", "FFFFFF", "Arrow", "B4D2FA", "Hot", "FFFF90", "Caption", "FFFF96", "Panel", "14305C", "Strip", "122A54", "Link", "96C8FF", "Dim", "96B4DC", "Status", "34405A", "Bar", "46AAF0", "BarBg", "FAFCFF", "Online", "7CD870", "NoReply", "E8B850", "BtnText", "FFFFFF")
 }
 
 Skin_Resolve() {

@@ -1,14 +1,10 @@
 ; Update list for ROSE Mod Launcher. Upload this next to the launcher files.
-version=1.2
-changes=Delete now names the account, and your accounts are backed up before every change (Settings > Recover lists the backups)
-changes=Back Up Settings / Restore Settings in Settings: game settings, keybinds, Steampunk settings and launcher settings in one zip
-changes=A server status light next to Client
-changes=Update notes like these, for the launcher and for mods
-changes=The Mods window warns when two mods change the same file
-changes=The launcher can take on the look of your UI theme (Steampunk turns it brass)
-9d1b6fbd446c8175a0907a1916405691d69275bb|Launcher Files/ROSE Mod Launcher.ico
+version=1.3
+changes=The Mods and Update Game buttons now look like the game's own buttons (red glass by default, dark brass glass with the Steampunk skin)
 f169f58c787fe209c5a1018279d60df40e94c7ad|Launcher Files/banner.png
 c3307a299a063043880fe5770828ce8cbe42913e|Launcher Files/bg.png
+784060f6ec5943f1cded353cf1b57b92e50359a0|Launcher Files/btn_h.png
+b6f36f6c10eea7f13763610baec11b448ad9cb33|Launcher Files/btn_n.png
 4ffbe224e65494b7e3368349de5681f51971276c|Launcher Files/close_h.png
 c2e69d719fb0cc8ef6d22ae16f850dc38a3ad4c9|Launcher Files/close_n.png
 14dad5bd34a056f5fa10888387f68596bcd3e70c|Launcher Files/dot_off.png
@@ -27,7 +23,8 @@ e08e01c0f119c39b4ce987991915e3badf7164f6|Launcher Files/nav_settings_h.png
 f966a37e98fc877d834c0c895dd5259968bcd569|Launcher Files/nav_support_n.png
 b7a22308a0ab0236f374b23b4b33a3e886282bac|Launcher Files/nav_website_h.png
 f6bb9b2686385c0b84243eb51349eb8c9203fc82|Launcher Files/nav_website_n.png
+9d1b6fbd446c8175a0907a1916405691d69275bb|Launcher Files/ROSE Mod Launcher.ico
 4a36f3fb1d9a9f432d1844ce80ad7ad25a0def58|Launcher Files/start_h.png
 3e5b38d1ccc0b5c2bd13a0b364f0404b32887a7f|Launcher Files/start_n.png
-0db0b309c61b5234a4a962731c64020b0e1d8165|ROSE Mod Launcher.ahk
-abf35916352805b93d5a5514fcfe2f0c73e2a884|ROSE Mod Launcher.exe
+17384f0730490708c3973408c9c1f27e6c1d496d|ROSE Mod Launcher.ahk
+cc869cb0a23067949e56500953659775c58369c0|ROSE Mod Launcher.exe
