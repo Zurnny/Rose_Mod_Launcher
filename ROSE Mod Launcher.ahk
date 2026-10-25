@@ -856,7 +856,7 @@ return TextBackgroundBrush
 }
 return DllCall("user32\CallWindowProc", "Ptr", WindowProcOld, "Ptr", hwnd, "UInt", uMsg, "Ptr", wParam, "Ptr", lParam)
 }
-Version := "1.5"
+Version := "1.6"
 Title := "ROSE Mod Launcher v" Version
 StartingY :=	25
 Gap :=			35
@@ -1733,10 +1733,14 @@ BuildUI() {
     ; --- auto-login strip ------------------------------------------------------------
     Loop 8 {
         col := Mod(A_Index - 1, 4), row := (A_Index - 1) // 4
-        x := 46 + col * 166, y := 374 + row * 22
-        AcctDots.Push(Main.Add("Picture", "x" (x - 16) " y" (y + 3) " w12 h12", Asset("dot_off.png")))
-        Main.SetFont("s9 norm c" Skin_C("Text") "")
-        s := Main.Add("Text", "x" x " y" y " w146 h18 Background" Skin_C("Strip") " 0x4000", "")
+        x := 36 + col * 164, y := 371 + row * 23
+        ; each account is a small glass button (acct_n/acct_h.png) with its name on top
+        b := Main.Add("Picture", "x" x " y" y " w156 h21", Asset("acct_n.png"))
+        b.OnEvent("Click", Acct_Click.Bind(A_Index))
+        HoverMap[b.Hwnd] := Acct_Hover(A_Index)
+        AcctDots.Push(b)
+        Main.SetFont("s9 norm c" Skin_C("BtnText") "")
+        s := Main.Add("Text", "x" (x + 6) " y" y " w144 h21 Center 0x200 BackgroundTrans 0x4000", "")
         s.OnEvent("Click", Acct_Click.Bind(A_Index))
         HoverMap[s.Hwnd] := Acct_Hover(A_Index)
         AcctSlots.Push(s)
@@ -1951,9 +1955,9 @@ Acct_Fill() {
         if (i <= total) {
             e := LoginEmail[i]
             s.Text := (DisplayMode = 1 ? e : LoginDisplay[e]) SetOverRideMarker(e)
-            s.SetFont("norm c" Skin_C("Text") "")
+            s.SetFont("norm c" Skin_C("BtnText") "")
             s.Visible := true
-            AcctDots[k].Value := Asset("dot_off.png")
+            AcctDots[k].Value := Asset("acct_n.png")
             AcctDots[k].Visible := true
         } else {
             s.Visible := false
@@ -1985,8 +1989,10 @@ Acct_Hover(Slot) {
 Acct_Light(Slot, On) {
     global AcctSlots, AcctDots
     try {
-        AcctSlots[Slot].SetFont(On ? "bold c" Skin_C("Caption") "" : "norm c" Skin_C("Text") "")
-        AcctDots[Slot].Value := Asset(On ? "dot_on.png" : "dot_off.png")
+        AcctSlots[Slot].SetFont(On ? "bold c" Skin_C("BtnText") "" : "norm c" Skin_C("BtnText") "")
+        AcctDots[Slot].Value := Asset(On ? "acct_h.png" : "acct_n.png")
+        AcctDots[Slot].GetPos(&x, &y, &w, &h)
+        Area_Redraw(x, y, w, h)
     }
 }
 
