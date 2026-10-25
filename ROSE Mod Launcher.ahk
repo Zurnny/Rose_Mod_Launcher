@@ -856,7 +856,7 @@ return TextBackgroundBrush
 }
 return DllCall("user32\CallWindowProc", "Ptr", WindowProcOld, "Ptr", hwnd, "UInt", uMsg, "Ptr", wParam, "Ptr", lParam)
 }
-Version := "1.4"
+Version := "1.5"
 Title := "ROSE Mod Launcher v" Version
 StartingY :=	25
 Gap :=			35
@@ -1752,15 +1752,15 @@ BuildUI() {
     HoverMap[AcctNext.Hwnd] := Text_Hover(AcctNext, Skin_C("Arrow"), Skin_C("Hot"))
 
     ; --- bottom row -------------------------------------------------------------------
-    Prog := Main.Add("Progress", "x11 y445 w628 h16 c" Skin_C("Bar") " Background" Skin_C("BarBg") " Range0-100", 0)
+    Prog := Main.Add("Progress", "x11 y445 w596 h16 c" Skin_C("Bar") " Background" Skin_C("BarBg") " Range0-100", 0)
     Main.SetFont("s9 norm c" Skin_C("Status") "")
-    StatusText := Main.Add("Text", "x12 y468 w628 h18 Background" Skin_C("Face") " 0x4000", "Ready")
-    p := Main.Add("Picture", "x650 y438 w82 h54", Asset("start_n.png"))
+    StatusText := Main.Add("Text", "x12 y468 w596 h18 Background" Skin_C("Face") " 0x4000", "Ready")
+    p := Main.Add("Picture", "x616 y438 w46 h54", Asset("repair_n.png"))
+    p.OnEvent("Click", Repair_Click)
+    HoverMap[p.Hwnd] := Pic_Hover(p, "repair")
+    p := Main.Add("Picture", "x668 y438 w82 h54", Asset("start_n.png"))
     p.OnEvent("Click", Start_Click)
     HoverMap[p.Hwnd] := Pic_Hover(p, "start")
-    p := Main.Add("Picture", "x735 y438 w15 h54", Asset("more_n.png"))
-    p.OnEvent("Click", (*) => BuildMoreUI())
-    HoverMap[p.Hwnd] := Pic_Hover(p, "more")
 
     if (MainX != "")
         Main.Show("x" MainX " y" MainY " w760 h500")
@@ -3719,4 +3719,40 @@ Launcher_Reskin() {
         BuildUI()
         SetTimer(() => Server_Check(), -1500)
     }
+}
+
+; -----------------------------------------------------------------------------
+;  Repair: put the game's own files back under every mod, let the official
+;  updater check and fix the game, then lay the mods on again fresh.
+; -----------------------------------------------------------------------------
+Repair_Click(*) {
+    global PatchBusy, CurrentTROSE
+    if PatchBusy {
+        Status_Set("Wait for the game update to finish first")
+        return
+    }
+    if (IsSet(CurrentTROSE) && CurrentTROSE != "" && ProcessExist(CurrentTROSE)) {
+        MsgBox("Close ROSE first, then press Repair again.", Title " - Repair", "Icon!")
+        return
+    }
+    r := MsgBox("Repair the game?`n`n"
+        . "1. Every mod's changes are taken out, so the game's own files are back.`n"
+        . "2. The official updater checks the game and downloads anything missing or out of date.`n"
+        . "3. Your mods that are on are put back, freshly copied from their folders.`n`n"
+        . "Your accounts, settings and keybinds are not touched.", Title " - Repair", "OKCancel Iconi")
+    if (r != "OK")
+        return
+    g := Mods_Game()
+    try {
+        Mods_Restore(g)
+    } catch as e {
+        MsgBox("The game's own files could not all be put back:`n" e.Message "`n`nRepair will still run the updater.", Title " - Repair", "Icon!")
+    }
+    Status_Set("Repair: mods taken out, now checking the game...", 0, true)
+    Patch_Run(() => Repair_Done())
+}
+
+Repair_Done() {
+    ModsRow_Refresh()
+    Status_Set("Repair finished - the game is checked and your mods are back on", 100)
 }

@@ -1,4 +1,4 @@
-ROSE Mod Launcher v1.4
+ROSE Mod Launcher v1.5
 ======================
 A launcher for ROSE Online with the game's news, one-click auto-login
 buttons, a UI theme picker and a mods list. Built on ROSE Login Manager v1.9
@@ -48,8 +48,12 @@ Server light Next to Client: green when the game server answers. "No reply"
 Login strip  Your auto-login buttons. Click one to log straight in.
 START        Opens the game normally, without logging in - the same way the
              official updater does.
->            The extra options from the old More window (export/import
-             logins, dark mode, Fix XML, resets).
+Repair       The wrench next to START. Takes every mod's changes out so the
+             game's own files are back, lets the official updater check
+             and fix the game, then puts your mods back on, freshly copied.
+             Close the game first. Accounts and settings are not touched.
+More         Settings > More options... has the extra options from the old
+             More window (export/import logins, dark mode, Fix XML, resets).
 
 GAME UPDATES
 ------------
