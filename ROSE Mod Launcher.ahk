@@ -2711,8 +2711,14 @@ ModsUI_Show(*) {
     ModsUI.SetFont("s9", "Segoe UI")
     ModsUI.OnEvent("Close", ModsUI_Close)
     x := 10
-    for b in [["Apply", ModsUI_Apply], ["Open Mods Folder", (*) => Run('"' Mods_Dir() '"')], ["Check for Updates", (*) => Mods_UpdateAll(false)]
-        , ["Turn All Off", ModsUI_AllOff], ["Make Update List", ModsUI_MakeManifest], ["Close", ModsUI_Close]] {
+    btns := []
+    btns.Push(["Apply", ModsUI_Apply])
+    btns.Push(["Open Mods Folder", (*) => Run('"' Mods_Dir() '"')])
+    btns.Push(["Check for Updates", (*) => Mods_UpdateAll(false)])
+    btns.Push(["Turn All Off", ModsUI_AllOff])
+    btns.Push(["Make Update List", ModsUI_MakeManifest])
+    btns.Push(["Close", ModsUI_Close])
+    for b in btns {
         Btn_Add(ModsUI, x, 8, 110, 30, b[1], b[2])
         x += 116
     }
