@@ -1,6 +1,6 @@
 ; Update list for ROSE Mod Launcher. Upload this next to the launcher files.
-version=1.6
-changes=Each auto-login account is now its own small glass button in the login strip
+version=1.7
+changes=The Mods window now matches the launcher: same colours and glass buttons (blue or brass with the Steampunk skin)
 f169f58c787fe209c5a1018279d60df40e94c7ad|Launcher Files/banner.png
 c3307a299a063043880fe5770828ce8cbe42913e|Launcher Files/bg.png
 784060f6ec5943f1cded353cf1b57b92e50359a0|Launcher Files/btn_h.png
@@ -24,8 +24,8 @@ fc3280503d288f5382792274b90a1d211f324239|Launcher Files/nav_website_h.png
 9d1b6fbd446c8175a0907a1916405691d69275bb|Launcher Files/ROSE Mod Launcher.ico
 9ea1125c19fc2cf849ed9979512ec5dd1cb8bac3|Launcher Files/start_h.png
 4c3be1435b0b3abba0790ad260b199768cb4603b|Launcher Files/start_n.png
-e49659eab8f0cb55efd8654e2cc43d851eea3e45|ROSE Mod Launcher.ahk
-0aec763fbba94add9bae722ca3cc19c450dec276|ROSE Mod Launcher.exe
+4b21aa3cc4081c914d022ce6420c944ab1870c73|ROSE Mod Launcher.ahk
+8a37a3f1a7cf7987e92e32f54274cd59a1033b72|ROSE Mod Launcher.exe
 370221229c350766bdf8942e78444c9b1cdccb62|Launcher Files/repair_h.png
 b1f948e53bae79d685a5eaf4127d7b4b089c000e|Launcher Files/repair_n.png
 c68c1d260e489544b5d47c9a207343b7d3f4a1ba|Launcher Files/acct_h.png

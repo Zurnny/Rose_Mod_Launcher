@@ -856,7 +856,7 @@ return TextBackgroundBrush
 }
 return DllCall("user32\CallWindowProc", "Ptr", WindowProcOld, "Ptr", hwnd, "UInt", uMsg, "Ptr", wParam, "Ptr", lParam)
 }
-Version := "1.6"
+Version := "1.7"
 Title := "ROSE Mod Launcher v" Version
 StartingY :=	25
 Gap :=			35
@@ -1861,7 +1861,7 @@ Btn_Hover(Pic, T) {
 Btn_Light(Pic, T, On) {
     Pic.Value := Asset(On ? "btn_h.png" : "btn_n.png")
     T.GetPos(&x, &y, &w, &h)
-    Area_Redraw(x, y, w, h)
+    Area_Redraw(x, y, w, h, T.Gui.Hwnd)
 }
 
 Btn_SetText(T, Text) {
@@ -1869,7 +1869,7 @@ Btn_SetText(T, Text) {
         return
     T.Text := Text
     T.GetPos(&x, &y, &w, &h)
-    Area_Redraw(x, y, w, h)
+    Area_Redraw(x, y, w, h, T.Gui.Hwnd)
 }
 
 Pic_Hover(Pic, Key) {
@@ -1896,11 +1896,11 @@ Status_Set(Text, Percent := -1, Force := false) {
         try Prog.Value := Percent
 }
 
-Area_Redraw(X, Y, W, H) {
+Area_Redraw(X, Y, W, H, Hwnd := 0) {
     global Main
     rc := Buffer(16)
     NumPut("Int", X, "Int", Y, "Int", X + W, "Int", Y + H, rc)
-    try DllCall("RedrawWindow", "Ptr", Main.Hwnd, "Ptr", rc, "Ptr", 0, "UInt", 0x185)
+    try DllCall("RedrawWindow", "Ptr", Hwnd ? Hwnd : Main.Hwnd, "Ptr", rc, "Ptr", 0, "UInt", 0x185)
 }
 
 ; START opens the game the same way the official updater does: no auto-login.
@@ -2705,23 +2705,26 @@ ModsUI_Show(*) {
         DirCreate dir
     Mods_OfferCleanup(g)
     ModsDirty := false
+    ; Same look as the launcher: its panel colour, its glass buttons and text colours
     ModsUI := Gui(, Title " - Mods")
+    ModsUI.BackColor := Skin_C("Panel")
     ModsUI.SetFont("s9", "Segoe UI")
     ModsUI.OnEvent("Close", ModsUI_Close)
-    ModsUI.Add("Button", "x10 y8 w90 h28", "Apply").OnEvent("Click", ModsUI_Apply)
-    ModsUI.Add("Button", "x105 y8 w130 h28", "Open Mods Folder").OnEvent("Click", (*) => Run('"' Mods_Dir() '"'))
-    ModsUI.Add("Button", "x240 y8 w130 h28", "Check for Updates").OnEvent("Click", (*) => Mods_UpdateAll(false))
-    ModsUI.Add("Button", "x375 y8 w90 h28", "Turn All Off").OnEvent("Click", ModsUI_AllOff)
-    ModsUI.Add("Button", "x470 y8 w105 h28", "Make Update List").OnEvent("Click", ModsUI_MakeManifest)
-    ModsUI.Add("Button", "x580 y8 w80 h28", "Close").OnEvent("Click", ModsUI_Close)
-    ModsUI.Add("Text", "x10 y46 w650", "Client: " CurrentTROSEDisplay "    (" g ")")
-    ModsLV := ModsUI.Add("ListView", "x10 y66 w650 h220 Checked -Multi Grid NoSortHdr", ["Mod", "Version", "Type", "Author", "Updates"])
+    x := 10
+    for b in [["Apply", ModsUI_Apply], ["Open Mods Folder", (*) => Run('"' Mods_Dir() '"')], ["Check for Updates", (*) => Mods_UpdateAll(false)]
+        , ["Turn All Off", ModsUI_AllOff], ["Make Update List", ModsUI_MakeManifest], ["Close", ModsUI_Close]] {
+        Btn_Add(ModsUI, x, 8, 110, 30, b[1], b[2])
+        x += 116
+    }
+    ModsUI.SetFont("s9 bold c" Skin_C("Head"))
+    ModsUI.Add("Text", "x10 y48 w686 Background" Skin_C("Panel"), "Client: " CurrentTROSEDisplay "    (" g ")")
+    ModsUI.SetFont("s9 norm c" Skin_C("Text"))
+    ModsLV := ModsUI.Add("ListView", "x10 y68 w686 h220 Checked -Multi Grid NoSortHdr Background" Skin_C("Strip") " c" Skin_C("Text"), ["Mod", "Version", "Type", "Author", "Updates"])
     ModsLV.OnEvent("ItemCheck", ModsLV_Check)
     ModsLV.OnEvent("ItemSelect", ModsLV_Select)
-    ModsInfo := ModsUI.Add("Text", "x10 y294 w650 h48", "Tick a mod to turn it on, then press Apply. Mods of the same type (like UI Theme) can't be on together.")
-    ModsUI.Add("Text", "x10 y346 w650", "To add a mod, put its folder in " dir)
-    If DarkMode = 2
-        DarkMode_Setter(ModsUI)
+    ModsInfo := ModsUI.Add("Text", "x10 y296 w686 h48 Background" Skin_C("Panel"), "Tick a mod to turn it on, then press Apply. Mods of the same type (like UI Theme) can't be on together.")
+    ModsUI.SetFont("s8 norm c" Skin_C("Dim"))
+    ModsUI.Add("Text", "x10 y348 w686 Background" Skin_C("Panel"), "To add a mod, put its folder in " dir)
     ModsUI_Fill()
     ModsUI.Show("AutoSize")
 }
@@ -2736,7 +2739,7 @@ ModsUI_Fill() {
         ModsLV.Delete()
         for m in ModsList
             ModsLV.Add(m.Enabled ? "Check" : "", m.Name, m.Version, m.Group = "" ? "Mod" : m.Group, m.Author, m.UpdateUrl != "" ? "Automatic" : "-")
-        ModsLV.ModifyCol(1, 230)
+        ModsLV.ModifyCol(1, 266)
         ModsLV.ModifyCol(2, 70)
         ModsLV.ModifyCol(3, 110)
         ModsLV.ModifyCol(4, 130)
