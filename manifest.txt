@@ -1,30 +1,30 @@
 ; Update list for ROSE Mod Launcher. Upload this next to the launcher files.
-version=1.3
-changes=The Mods and Update Game buttons now look like the game's own buttons (red glass by default, dark brass glass with the Steampunk skin)
+version=1.4
+changes=Every button on the launcher (top bar, _ X, START, >) now looks like the game's own buttons, in both the default and Steampunk skins
 f169f58c787fe209c5a1018279d60df40e94c7ad|Launcher Files/banner.png
 c3307a299a063043880fe5770828ce8cbe42913e|Launcher Files/bg.png
 784060f6ec5943f1cded353cf1b57b92e50359a0|Launcher Files/btn_h.png
 b6f36f6c10eea7f13763610baec11b448ad9cb33|Launcher Files/btn_n.png
-4ffbe224e65494b7e3368349de5681f51971276c|Launcher Files/close_h.png
-c2e69d719fb0cc8ef6d22ae16f850dc38a3ad4c9|Launcher Files/close_n.png
+8e444778ce064dd7a02d3b2dfa69ce50e571a4e6|Launcher Files/close_h.png
+38118923e5065209ae6ff5b23230a2ed8c7fb02d|Launcher Files/close_n.png
 14dad5bd34a056f5fa10888387f68596bcd3e70c|Launcher Files/dot_off.png
 2c46dd31acb0dbd339eafd72de0048675a02a449|Launcher Files/dot_on.png
-ea2494fd5e7dda04f2515acd4f87d4b362aa2813|Launcher Files/min_h.png
-e549387272bfea444ae1a1e524e08f7f64109482|Launcher Files/min_n.png
-4e0aa35a6f7dee40c334b4aebbac173904f3a0a6|Launcher Files/more_h.png
-898ba6c9b7f65aa4523419410b4215b4e75fea7b|Launcher Files/more_n.png
-026c9824acc1f4c8d30fa684b18f39c004d2fa42|Launcher Files/nav_forum_h.png
-5358f91a4cbd9e7a830bee9a1842a54550ca065c|Launcher Files/nav_forum_n.png
-fe275afffdcf5af2ba80913e127bc7d8942acdc6|Launcher Files/nav_powerup_h.png
-86ed41cf1297b9fd23128ffd183741ef97e9e86d|Launcher Files/nav_powerup_n.png
-e08e01c0f119c39b4ce987991915e3badf7164f6|Launcher Files/nav_settings_h.png
-1bd3393bcf34d61519985a1749b45b44ef73df23|Launcher Files/nav_settings_n.png
-04504a558dfdeafb2c4eed792fc9a2c99cd8b8e7|Launcher Files/nav_support_h.png
-f966a37e98fc877d834c0c895dd5259968bcd569|Launcher Files/nav_support_n.png
-b7a22308a0ab0236f374b23b4b33a3e886282bac|Launcher Files/nav_website_h.png
-f6bb9b2686385c0b84243eb51349eb8c9203fc82|Launcher Files/nav_website_n.png
+0708e55155a34eb27cfbecd296e75a5dec218fcb|Launcher Files/min_h.png
+a2502ae6c9943fa273b6d3c6ab8d1d85225e21b9|Launcher Files/min_n.png
+53dd35696c1a894e6f7f92a22b2859a6e8482c8e|Launcher Files/more_h.png
+7979cd4670e30e2fcc184b2c50286a75046811a1|Launcher Files/more_n.png
+ed467b154a6aced1e70940429979419e89bbf9cb|Launcher Files/nav_forum_h.png
+d758cae5fda0a00d0b013ea916ee592f072bc207|Launcher Files/nav_forum_n.png
+cb62b6f985506474feaf12fb275c20b12c4a7aa4|Launcher Files/nav_powerup_h.png
+89bcba85c7d2761f6709a8e8cec4980eecdbcc84|Launcher Files/nav_powerup_n.png
+98e2dce07e98fe95825def463bcc28e336e594ae|Launcher Files/nav_settings_h.png
+9609c19c3db26f9bd79e43607a3c31263d2bdb28|Launcher Files/nav_settings_n.png
+2e0656f24968f7fa4e58bcc5d2599d5f4bce451c|Launcher Files/nav_support_h.png
+bcfa4c97ad6eb21c497c664f9d2d96667e166517|Launcher Files/nav_support_n.png
+fc3280503d288f5382792274b90a1d211f324239|Launcher Files/nav_website_h.png
+9142488a3e69cbf0d738a9bc0d3809db38e8b98c|Launcher Files/nav_website_n.png
 9d1b6fbd446c8175a0907a1916405691d69275bb|Launcher Files/ROSE Mod Launcher.ico
-4a36f3fb1d9a9f432d1844ce80ad7ad25a0def58|Launcher Files/start_h.png
-3e5b38d1ccc0b5c2bd13a0b364f0404b32887a7f|Launcher Files/start_n.png
-17384f0730490708c3973408c9c1f27e6c1d496d|ROSE Mod Launcher.ahk
-cc869cb0a23067949e56500953659775c58369c0|ROSE Mod Launcher.exe
+9ea1125c19fc2cf849ed9979512ec5dd1cb8bac3|Launcher Files/start_h.png
+4c3be1435b0b3abba0790ad260b199768cb4603b|Launcher Files/start_n.png
+e33e2d4caed91b467c9e553b783bc91ec52e8b14|ROSE Mod Launcher.ahk
+c01eda3699b21122a012619e6ee762685a8155d7|ROSE Mod Launcher.exe
