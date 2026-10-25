@@ -856,7 +856,7 @@ return TextBackgroundBrush
 }
 return DllCall("user32\CallWindowProc", "Ptr", WindowProcOld, "Ptr", hwnd, "UInt", uMsg, "Ptr", wParam, "Ptr", lParam)
 }
-Version := "1.7"
+Version := "1.8"
 Title := "ROSE Mod Launcher v" Version
 StartingY :=	25
 Gap :=			35
@@ -1716,19 +1716,20 @@ BuildUI() {
     }
 
     ; --- client, theme, mods -----------------------------------------------------
+    ; The Client picker is hidden: the launcher keeps using the client already
+    ; chosen (the game folder it found), so nothing else changes.
     Main.SetFont("s9 bold c" Skin_C("Head") "")
-    Main.Add("Text", "x504 y209 w200 h18 Background" Skin_C("Panel") "", "Client")
-    Main.Add("Text", "x504 y257 w200 h18 Background" Skin_C("Panel") "", "UI Theme")
+    Main.Add("Text", "x504 y240 w120 h18 Background" Skin_C("Panel") "", "UI Theme")
     Main.SetFont("s8 norm c" Skin_C("Dim") "")
-    ServerText := Main.Add("Text", "x584 y211 w146 h16 Right Background" Skin_C("Panel") "", "")
+    ServerText := Main.Add("Text", "x584 y242 w146 h16 Right Background" Skin_C("Panel") "", "")
     Main.SetFont("s9 norm c000000")
-    DDL := Main.Add("DropDownList", "x504 y228 w226 vTROSEChoice", TROSEDisplay)
+    DDL := Main.Add("DropDownList", "x504 y228 w226 Hidden vTROSEChoice", TROSEDisplay)
     DDL.Add(["------------------------------", "Add/Remove ROSE"])
     DDL.OnEvent("Change", TROSEddl)
-    ThemeDDL := Main.Add("DropDownList", "x504 y276 w226 vThemeChoice")
+    ThemeDDL := Main.Add("DropDownList", "x504 y259 w226 vThemeChoice")
     ThemeDDL.OnEvent("Change", ThemeDDL_Change)
-    ModsBtn := Btn_Add(Main, 504, 311, 110, 30, "Mods", (*) => ModsUI_Show())
-    Btn_Add(Main, 620, 311, 110, 30, "Update Game", (*) => Patch_Run())
+    ModsBtn := Btn_Add(Main, 504, 300, 110, 30, "Mods", (*) => ModsUI_Show())
+    Btn_Add(Main, 620, 300, 110, 30, "Update Game", (*) => Patch_Run())
 
     ; --- auto-login strip ------------------------------------------------------------
     Loop 8 {

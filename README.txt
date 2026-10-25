@@ -1,4 +1,4 @@
-ROSE Mod Launcher v1.7
+ROSE Mod Launcher v1.8
 ======================
 A launcher for ROSE Online with the game's news, one-click auto-login
 buttons, a UI theme picker and a mods list. Built on ROSE Login Manager v1.9
@@ -37,13 +37,12 @@ Top bar      Website, Forum, Support, Power Up! open those pages.
 News         The latest posts from roseonlinegame.com/news. Click a notice
              to show it, click the picture or its title to read it.
              Pictures are saved, so the last news still shows offline.
-Client       Which game install to use (Add/Remove ROSE is at the bottom).
 Update Game  Patches the game right here - no Rednim window. The launcher
              also does this by itself every time it opens (turn that off in
              Settings). START and login buttons wait for it to finish.
 UI Theme     Default (the game's own look) or any theme mod.
 Mods         Turn mods on and off, check for updates, open the mods folder.
-Server light Next to Client: green when the game server answers. "No reply"
+Server light Next to UI Theme: green when the game server answers. "No reply"
              only means it didn't answer the check - it may still be up.
 Login strip  Your auto-login buttons. Click one to log straight in.
 START        Opens the game normally, without logging in - the same way the
