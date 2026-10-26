@@ -856,7 +856,7 @@ return TextBackgroundBrush
 }
 return DllCall("user32\CallWindowProc", "Ptr", WindowProcOld, "Ptr", hwnd, "UInt", uMsg, "Ptr", wParam, "Ptr", lParam)
 }
-Version := "1.8"
+Version := "1.9"
 Title := "ROSE Mod Launcher v" Version
 StartingY :=	25
 Gap :=			35
@@ -2552,10 +2552,21 @@ Mods_Apply(Game) {
     Status_Set("Putting the game's own files back...", 0)
     Mods_Restore(Game)
     plan := Map()
+    plan.CaseSense := false     ; Windows paths: "data\ui" and "Data\ui" are the same file
+    ; KeepUserChanges= in mod.ini lists files the mod itself rewrites while you
+    ; play (for example a settings file). They are copied once, then left as they
+    ; are: never put back over your changes and never counted as "changed".
+    keep := Map()
+    keep.CaseSense := false
     for m in Mods_Scan(Game) {
         if !m.Enabled
             continue
         src := m.Path "files\"
+        for k in StrSplit(IniRead(m.Path "mod.ini", "Mod", "KeepUserChanges", ""), [",", ";"]) {
+            k := Trim(StrReplace(k, "/", "\"))
+            if (k != "")
+                keep[k] := true
+        }
         Loop Files src "*", "FR" {
             rel := SubStr(A_LoopFileFullPath, StrLen(src) + 1)
             plan[rel] := A_LoopFileFullPath
@@ -2567,6 +2578,15 @@ Mods_Apply(Game) {
     try {
         for rel, from in plan {
             target := Game rel
+            if keep.Has(rel) {
+                if !FileExist(target) {
+                    Mods_EnsureDir(target)
+                    FileCopy from, target, 1
+                }
+                out.WriteLine("K|*|" rel)
+                done++
+                continue
+            }
             if FileExist(target) {
                 backup := dir "_backup\" rel
                 Mods_EnsureDir(backup)
@@ -2604,6 +2624,8 @@ Mods_NeedsApply(Game) {
     for line in StrSplit(FileRead(man, "UTF-8"), "`n", "`r") {
         p := StrSplit(line, "|", , 3)
         if (p.Length < 3)
+            continue
+        if (p[2] = "*")      ; a KeepUserChanges file: the mod changes it itself
             continue
         if !FileExist(Game p[3]) || Mods_Sha(Game p[3]) != p[2]
             return true
@@ -3664,6 +3686,7 @@ Server_Check() {
 ; -----------------------------------------------------------------------------
 Mods_Clashes(List) {
     owner := Map()
+    owner.CaseSense := false
     count := Map()
     winner := Map()
     for m in List {

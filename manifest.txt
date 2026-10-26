@@ -1,6 +1,7 @@
 ; Update list for ROSE Mod Launcher. Upload this next to the launcher files.
-version=1.8
-changes=The Client picker is gone from the main window (the launcher keeps using your game folder); UI Theme and the server light moved up
+version=1.9
+changes=Mods can list files they rewrite themselves (KeepUserChanges= in mod.ini) so the launcher leaves them alone - needed for the Ice UI's Loot Filter
+changes=File paths are matched without caring about capitals (data\ui and Data\ui are the same folder)
 f169f58c787fe209c5a1018279d60df40e94c7ad|Launcher Files/banner.png
 c3307a299a063043880fe5770828ce8cbe42913e|Launcher Files/bg.png
 784060f6ec5943f1cded353cf1b57b92e50359a0|Launcher Files/btn_h.png
@@ -24,8 +25,8 @@ fc3280503d288f5382792274b90a1d211f324239|Launcher Files/nav_website_h.png
 9d1b6fbd446c8175a0907a1916405691d69275bb|Launcher Files/ROSE Mod Launcher.ico
 9ea1125c19fc2cf849ed9979512ec5dd1cb8bac3|Launcher Files/start_h.png
 4c3be1435b0b3abba0790ad260b199768cb4603b|Launcher Files/start_n.png
-147b3a83d0fcf36cbfcbe0f5449c558de9d5f392|ROSE Mod Launcher.ahk
-09facc488cecea81e9e5b7496f83ebcd7f8d9d44|ROSE Mod Launcher.exe
+c44e6ed8edd7df84dae952f4f44d20e5e78155d9|ROSE Mod Launcher.ahk
+9490f092e2a7bcb4712f56fdabf015e82ba6f8ab|ROSE Mod Launcher.exe
 370221229c350766bdf8942e78444c9b1cdccb62|Launcher Files/repair_h.png
 b1f948e53bae79d685a5eaf4127d7b4b089c000e|Launcher Files/repair_n.png
 c68c1d260e489544b5d47c9a207343b7d3f4a1ba|Launcher Files/acct_h.png

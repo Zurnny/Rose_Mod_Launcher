@@ -1,4 +1,4 @@
-ROSE Mod Launcher v1.8
+ROSE Mod Launcher v1.9
 ======================
 A launcher for ROSE Online with the game's news, one-click auto-login
 buttons, a UI theme picker and a mods list. Built on ROSE Login Manager v1.9
@@ -89,6 +89,9 @@ mod.ini:
                     mod per Group can be on at a time)
   Description=What it does. Use \n for a new line.
   Priority=50       higher goes on top when two mods change the same file
+  KeepUserChanges=  files the mod rewrites itself while you play (comma
+                    separated, e.g. a settings file): copied once, then
+                    never put back over your changes
   UpdateUrl=        see below
 
 Folders starting with _ are ignored.
