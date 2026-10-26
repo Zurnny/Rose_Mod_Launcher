@@ -1,4 +1,4 @@
-ROSE Mod Launcher v1.10
+ROSE Mod Launcher v1.11
 ======================
 A launcher for ROSE Online with the game's news, one-click auto-login
 buttons, a UI theme picker and a mods list. Built on ROSE Login Manager v1.9

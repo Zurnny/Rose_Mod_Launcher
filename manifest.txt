@@ -1,6 +1,6 @@
 ; Update list for ROSE Mod Launcher. Upload this next to the launcher files.
-version=1.10
-changes=The Repair button's label no longer touches the bottom edge
+version=1.11
+changes=The launcher's version now shows at the right end of the status line
 f169f58c787fe209c5a1018279d60df40e94c7ad|Launcher Files/banner.png
 c3307a299a063043880fe5770828ce8cbe42913e|Launcher Files/bg.png
 784060f6ec5943f1cded353cf1b57b92e50359a0|Launcher Files/btn_h.png
@@ -24,8 +24,8 @@ fc3280503d288f5382792274b90a1d211f324239|Launcher Files/nav_website_h.png
 9d1b6fbd446c8175a0907a1916405691d69275bb|Launcher Files/ROSE Mod Launcher.ico
 9ea1125c19fc2cf849ed9979512ec5dd1cb8bac3|Launcher Files/start_h.png
 4c3be1435b0b3abba0790ad260b199768cb4603b|Launcher Files/start_n.png
-eb154b4e8f89b2584432b67b53c4de85d13667da|ROSE Mod Launcher.ahk
-1c0d2e62ab64673f3181b6b87c87f1418e84a1b0|ROSE Mod Launcher.exe
+606a405cbec4eb01be970edbb437a88787599eca|ROSE Mod Launcher.ahk
+f29a0c31e55030bd5ce4fc1d2621dd6cb0ec0927|ROSE Mod Launcher.exe
 9ec6728bb38359f3f74d3cbf814ec9dcf0d6333f|Launcher Files/repair_h.png
 0bfc3016e6e65525999cd053d80737a40a6f040b|Launcher Files/repair_n.png
 c68c1d260e489544b5d47c9a207343b7d3f4a1ba|Launcher Files/acct_h.png

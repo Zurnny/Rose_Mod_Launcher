@@ -856,7 +856,7 @@ return TextBackgroundBrush
 }
 return DllCall("user32\CallWindowProc", "Ptr", WindowProcOld, "Ptr", hwnd, "UInt", uMsg, "Ptr", wParam, "Ptr", lParam)
 }
-Version := "1.10"
+Version := "1.11"
 Title := "ROSE Mod Launcher v" Version
 StartingY :=	25
 Gap :=			35
@@ -1759,7 +1759,10 @@ BuildUI() {
     ; --- bottom row -------------------------------------------------------------------
     Prog := Main.Add("Progress", "x11 y445 w596 h16 c" Skin_C("Bar") " Background" Skin_C("BarBg") " Range0-100", 0)
     Main.SetFont("s9 norm c" Skin_C("Status") "")
-    StatusText := Main.Add("Text", "x12 y468 w596 h18 Background" Skin_C("Face") " 0x4000", "Ready")
+    StatusText := Main.Add("Text", "x12 y468 w536 h18 Background" Skin_C("Face") " 0x4000", "Ready")
+    ; the launcher's version, small, at the right end of the status line
+    Main.SetFont("s8 norm c" Skin_C("Dim") "")
+    Main.Add("Text", "x550 y470 w58 h16 Right Background" Skin_C("Face") "", "v" Version)
     p := Main.Add("Picture", "x616 y438 w46 h54", Asset("repair_n.png"))
     p.OnEvent("Click", Repair_Click)
     HoverMap[p.Hwnd] := Pic_Hover(p, "repair")
