@@ -856,7 +856,7 @@ return TextBackgroundBrush
 }
 return DllCall("user32\CallWindowProc", "Ptr", WindowProcOld, "Ptr", hwnd, "UInt", uMsg, "Ptr", wParam, "Ptr", lParam)
 }
-Version := "1.9"
+Version := "1.10"
 Title := "ROSE Mod Launcher v" Version
 StartingY :=	25
 Gap :=			35
