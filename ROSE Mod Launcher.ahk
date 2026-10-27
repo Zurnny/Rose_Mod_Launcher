@@ -856,7 +856,7 @@ return TextBackgroundBrush
 }
 return DllCall("user32\CallWindowProc", "Ptr", WindowProcOld, "Ptr", hwnd, "UInt", uMsg, "Ptr", wParam, "Ptr", lParam)
 }
-Version := "1.11"
+Version := "1.12"
 Title := "ROSE Mod Launcher v" Version
 StartingY :=	25
 Gap :=			35
@@ -3690,6 +3690,8 @@ Server_Check() {
 Mods_Clashes(List) {
     owner := Map()
     owner.CaseSense := false
+    ownerFile := Map()
+    ownerFile.CaseSense := false
     count := Map()
     winner := Map()
     for m in List {
@@ -3699,11 +3701,18 @@ Mods_Clashes(List) {
         Loop Files src "*", "FR" {
             rel := SubStr(A_LoopFileFullPath, StrLen(src) + 1)
             if owner.Has(rel) && owner[rel] != m.Name {
-                k := owner[rel] " and " m.Name
-                count[k] := (count.Has(k) ? count[k] : 0) + 1
-                winner[k] := m.Name
+                ; add-ons that share a file ship the very same copy of it, so that
+                ; isn't a clash: only count files whose contents differ
+                same := false
+                try same := (FileGetSize(ownerFile[rel]) = A_LoopFileSize) && (Mods_Sha(ownerFile[rel]) = Mods_Sha(A_LoopFileFullPath))
+                if !same {
+                    k := owner[rel] " and " m.Name
+                    count[k] := (count.Has(k) ? count[k] : 0) + 1
+                    winner[k] := m.Name
+                }
             }
             owner[rel] := m.Name
+            ownerFile[rel] := A_LoopFileFullPath
         }
     }
     text := ""
