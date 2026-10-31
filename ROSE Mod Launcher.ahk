@@ -856,7 +856,7 @@ return TextBackgroundBrush
 }
 return DllCall("user32\CallWindowProc", "Ptr", WindowProcOld, "Ptr", hwnd, "UInt", uMsg, "Ptr", wParam, "Ptr", lParam)
 }
-Version := "1.12"
+Version := "1.13"
 Title := "ROSE Mod Launcher v" Version
 StartingY :=	25
 Gap :=			35
@@ -3112,7 +3112,10 @@ Mods_UpdateAll(Quiet) {
     if (whatsnew != "")
         MsgBox("What's new`n`n" RTrim(whatsnew, "`n"), Title " - What's new", "T30")
     if !Quiet {
-        MsgBox((report.Length ? msg : "All mods with automatic updates are up to date.") (failed.Length ? "`n`nCould not check: " failed.Length " mod(s). Check the UpdateUrl in their mod.ini." : ""), Title " - Mods")
+        names := ""
+        for f in failed
+            names .= "`n  - " f
+        MsgBox((report.Length ? msg : "All mods with automatic updates are up to date.") (failed.Length ? "`n`nCould not check " (failed.Length = 1 ? "this mod" : "these " failed.Length " mods") " for updates:" names "`n`nThe update address (UpdateUrl in mod.ini) could not be reached: the repo may have been renamed, removed, or not be online yet." : ""), Title " - Mods")
     }
     ModsRow_Refresh()
     ModsUI_Fill()
