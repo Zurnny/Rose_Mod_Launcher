@@ -2242,18 +2242,6 @@ GS_Brackets(s) {
     return o - c
 }
 
-GS_Show(e) {
-    switch e.Type {
-        case "bool": return e.Val ? "On" : "Off"
-        case "float":
-            if GS_IsPercent(e.T, e.Key)
-                return Round(e.Val * 100) "%"
-            return GS_Num(e.Val)
-        case "int": return e.Val ""
-        default: return e.Val
-    }
-}
-
 GS_Num(f) {
     s := Format("{:.3f}", f)
     s := RTrim(RTrim(s, "0"), ".")
@@ -2275,7 +2263,7 @@ GS_Toml(e, v) {
 GS_GameRunning() => (IsSet(CurrentTROSE) && CurrentTROSE != "" && ProcessExist(CurrentTROSE)) || ProcessExist("trose.exe")
 
 GameSettings_Show(*) {
-    global GSUI, GSList, GSLV, GSEntries, GSChanged, GSSecs
+    global GSUI, GSList, GSEntries, GSChanged, GSText, GSSecs, GSCtls, GSShown
     f := GS_File()
     if !FileExist(f) {
         MsgBox("The game's settings file (rose.toml) was not found in:`n" GS_Dir() "`n`nStart the game once and close it, then try again.", Title " - Game Settings")
@@ -2283,122 +2271,116 @@ GameSettings_Show(*) {
     }
     try GSUI.Destroy()
     GSEntries := GS_Parse(FileRead(f, "UTF-8"))
-    GSChanged := Map()
-    GSSecs := []
-    seen := Map()
-    for e in GSEntries
-        if !seen.Has(e.T)
-            seen[e.T] := 1, GSSecs.Push(e.T)
+    GSChanged := Map(), GSText := Map(), GSCtls := [], GSShown := 0
+    GSSecs := [], bySec := Map()
+    for idx, e in GSEntries {
+        if !bySec.Has(e.T)
+            bySec[e.T] := [], GSSecs.Push(e.T)
+        bySec[e.T].Push(idx)
+    }
+    ROWS := 16, RH := 26, COLW := 350, TOP := 52
+    cols := 1
+    for t in GSSecs
+        cols := Max(cols, Ceil(bySec[t].Length / ROWS))
     names := []
     for t in GSSecs
         names.Push(GS_SectionName(t))
     GSUI := Gui(, Title " - Game Settings")
     GSUI.SetFont("s9", "Segoe UI")
-    GSUI.Add("Text", "x10 y10 w640 h34", "The game's own settings (rose.toml). Double-click a setting to change it, then press Save.`nClose ROSE before saving: the game rewrites this file when it closes.")
-    GSList := GSUI.Add("ListBox", "x10 y52 w170 h300", names)
-    GSList.OnEvent("Change", (*) => GS_Fill())
-    GSLV := GSUI.Add("ListView", "x190 y52 w460 h300 -Multi Grid NoSortHdr", ["Setting", "Value", ""])
-    GSLV.OnEvent("DoubleClick", (LV, Row) => (Row ? GS_Edit(Row) : 0))
-    GSUI.Add("Button", "x190 y360 w100 h28", "Change...").OnEvent("Click", (*) => GS_Edit(GSLV.GetNext(0)))
-    GSUI.Add("Button", "x296 y360 w120 h28", "Open rose.toml").OnEvent("Click", (*) => Run('notepad.exe "' GS_File() '"'))
-    GSUI.Add("Button", "x440 y360 w100 h28 Default", "Save").OnEvent("Click", (*) => GS_Save())
-    GSUI.Add("Button", "x550 y360 w100 h28", "Close").OnEvent("Click", (*) => GS_Close())
+    GSUI.Add("Text", "x10 y10 w" (180 + cols * COLW) " h34", "The game's own settings (rose.toml). Change what you like, then press Save (a * marks what you changed).`nClose ROSE before saving: the game rewrites this file when it closes.")
+    GSList := GSUI.Add("ListBox", "x10 y" TOP " w170 h" (ROWS * RH), names)
+    GSList.OnEvent("Change", (*) => GS_Page(GSList.Value))
+    ; every section's settings are made once and only the picked section is shown
+    for s, t in GSSecs {
+        ctls := []
+        for k, idx in bySec[t] {
+            e := GSEntries[idx]
+            x := 190 + ((k - 1) // ROWS) * COLW
+            y := TOP + Mod(k - 1, ROWS) * RH
+            cx := x + 205
+            e.Lbl := GSUI.Add("Text", "x" x " y" (y + 3) " w200 Hidden", GS_Label(e.Key))
+            ctls.Push(e.Lbl)
+            ch := GS_Choices(e.T, e.Key)
+            if (e.Type = "bool") {
+                on := GSUI.Add("Radio", "x" cx " y" (y + 2) " w44 h20 Hidden Group" (e.Val ? " Checked" : ""), "On")
+                off := GSUI.Add("Radio", "x" (cx + 48) " y" (y + 2) " w44 h20 Hidden" (e.Val ? "" : " Checked"), "Off")
+                on.OnEvent("Click", GS_SetVal.Bind(idx, true))
+                off.OnEvent("Click", GS_SetVal.Bind(idx, false))
+                ctls.Push(on, off)
+            } else if IsObject(ch) {
+                if !GS_Has(ch, e.Val)
+                    ch.Push(e.Val)
+                c := GSUI.Add("DropDownList", "x" cx " y" y " w130 Hidden", ch)
+                c.Choose(GS_Has(ch, e.Val))
+                c.OnEvent("Change", GS_ListVal.Bind(idx))
+                ctls.Push(c)
+            } else if (e.Type = "float" && GS_IsPercent(e.T, e.Key)) {
+                c := GSUI.Add("Slider", "x" (cx - 4) " y" y " w110 h24 Range0-100 NoTicks Hidden", Round(e.Val * 100))
+                p := GSUI.Add("Text", "x" (cx + 110) " y" (y + 3) " w40 Hidden", Round(e.Val * 100) "%")
+                c.OnEvent("Change", GS_SlideVal.Bind(idx, p))
+                ctls.Push(c, p)
+            } else {
+                c := GSUI.Add("Edit", "x" cx " y" y " w" (e.Type = "str" ? 130 : 80) " h22 Hidden", e.Type = "float" ? GS_Num(e.Val) : e.Val "")
+                c.OnEvent("Change", GS_TextVal.Bind(idx))
+                ctls.Push(c)
+            }
+        }
+        GSCtls.Push(ctls)
+    }
+    by := TOP + ROWS * RH + 8
+    rx := 180 + cols * COLW
+    GSUI.Add("Button", "x190 y" by " w120 h28", "Open rose.toml").OnEvent("Click", (*) => Run('notepad.exe "' GS_File() '"'))
+    GSUI.Add("Button", "x" (rx - 210) " y" by " w100 h28 Default", "Save").OnEvent("Click", (*) => GS_Save())
+    GSUI.Add("Button", "x" (rx - 100) " y" by " w100 h28", "Close").OnEvent("Click", (*) => GS_Close())
     GSUI.OnEvent("Close", (*) => (GS_Close(), true))
     GSUI.OnEvent("Escape", (*) => GS_Close())
     If DarkMode = 2
         DarkMode_Setter(GSUI)
     GSList.Choose(1)
-    GS_Fill()
+    GS_Page(1)
     GSUI.Show("AutoSize")
     if GS_GameRunning()
         MsgBox("ROSE is running. You can look at the settings, but close the game before saving: it writes rose.toml when it closes and would undo the changes.", Title " - Game Settings", "Icon! Owner" GSUI.Hwnd)
 }
 
-GS_Fill() {
-    global GSList, GSLV, GSEntries, GSChanged, GSSecs, GSRows
-    GSLV.Delete()
-    GSRows := []
-    if (GSList.Value < 1)
+GS_Page(n) {
+    global GSCtls, GSShown
+    if (n < 1 || n > GSCtls.Length)
         return
-    t := GSSecs[GSList.Value]
-    for idx, e in GSEntries {
-        if (e.T != t)
-            continue
-        GSRows.Push(idx)
-        GSLV.Add(, GS_Label(e.Key), GS_Show(e), GSChanged.Has(idx) ? "changed" : "")
-    }
-    GSLV.ModifyCol(1, 250)
-    GSLV.ModifyCol(2, 130)
-    GSLV.ModifyCol(3, 70)
+    if GSShown
+        for c in GSCtls[GSShown]
+            c.Visible := false
+    for c in GSCtls[n]
+        c.Visible := true
+    GSShown := n
 }
 
-GS_Edit(Row) {
-    global GSEntries, GSRows, GSChanged, GSUI
-    if !Row
-        return
-    idx := GSRows[Row], e := GSEntries[idx]
-    if (e.Type = "bool") {                  ; on/off: just flip it
-        e.Val := !e.Val
-        GS_Mark(idx, Row)
-        return
-    }
-    d := Gui("+Owner" GSUI.Hwnd " -MinimizeBox", Title " - " GS_Label(e.Key))
-    d.SetFont("s9", "Segoe UI")
-    d.Add("Text", "x10 y10 w300", GS_SectionName(e.T) " > " GS_Label(e.Key) "   (" e.Key ")")
-    ch := GS_Choices(e.T, e.Key), ctl := "", pct := ""
-    if IsObject(ch) {
-        if !GS_Has(ch, e.Val)
-            ch.Push(e.Val)
-        ctl := d.Add("DropDownList", "x10 y34 w300", ch)
-        ctl.Choose(GS_Has(ch, e.Val))
-    } else if (e.Type = "float" && GS_IsPercent(e.T, e.Key)) {
-        ctl := d.Add("Slider", "x10 y34 w250 Range0-100 ToolTip", Round(e.Val * 100))
-        pct := d.Add("Text", "x266 y38 w44", Round(e.Val * 100) "%")
-        ctl.OnEvent("Change", (c, *) => pct.Value := c.Value "%")
-    } else {
-        ctl := d.Add("Edit", "x10 y34 w300", e.Type = "float" ? GS_Num(e.Val) : e.Val "")
-        if (e.Type != "str")
-            d.Add("Text", "x10 y62 w300 cGray", e.Type = "int" ? "A whole number." : "A number (a dot for decimals, like 0.5).")
-    }
-    ok := d.Add("Button", "x130 y86 w86 h26 Default", "OK")
-    d.Add("Button", "x224 y86 w86 h26", "Cancel").OnEvent("Click", (*) => d.Destroy())
-    ok.OnEvent("Click", GS_EditOK.Bind(d, ctl, idx, Row))
-    d.OnEvent("Escape", (*) => d.Destroy())
-    If DarkMode = 2
-        DarkMode_Setter(d)
-    d.Show("AutoSize")
-}
-
-GS_EditOK(d, ctl, idx, Row, *) {
+; an on/off, a choice or a slider was changed
+GS_SetVal(idx, v, *) {
     global GSEntries
-    e := GSEntries[idx]
-    v := ctl.Type = "Slider" ? ctl.Value / 100 : ctl.Text
-    if (e.Type = "int") {
-        v := Trim(v)
-        if !RegExMatch(v, "^[+-]?\d+$") {
-            MsgBox("Please enter a whole number.", Title, "Owner" d.Hwnd)
-            return
-        }
-        v := Integer(v)
-    } else if (e.Type = "float" && ctl.Type != "Slider") {
-        v := Trim(StrReplace(v, ",", "."))
-        if !RegExMatch(v, "^[+-]?(\d+\.?\d*|\.\d+)$") {
-            MsgBox("Please enter a number, like 0.5.", Title, "Owner" d.Hwnd)
-            return
-        }
-        v := Float(v)
-    }
-    d.Destroy()
-    if (v == e.Val)
-        return
-    e.Val := v
-    GS_Mark(idx, Row)
+    GSEntries[idx].Val := v
+    GS_Mark(idx)
 }
 
-GS_Mark(idx, Row) {
-    global GSChanged, GSEntries, GSLV
+GS_ListVal(idx, Ctl, *) => GS_SetVal(idx, Ctl.Text)
+
+GS_SlideVal(idx, Pct, Ctl, *) {
+    Pct.Value := Ctl.Value "%"
+    GS_SetVal(idx, Ctl.Value / 100)
+}
+
+; a number or text box was typed in: checked when saving
+GS_TextVal(idx, Ctl, *) {
+    global GSText
+    GSText[idx] := Ctl.Text
+    GS_Mark(idx)
+}
+
+GS_Mark(idx) {
+    global GSChanged, GSEntries
     GSChanged[idx] := 1
-    GSLV.Modify(Row, , , GS_Show(GSEntries[idx]), "changed")
+    e := GSEntries[idx]
+    try e.Lbl.Text := GS_Label(e.Key) " *"
 }
 
 GS_Has(arr, v) {
@@ -2409,7 +2391,7 @@ GS_Has(arr, v) {
 }
 
 GS_Save() {
-    global GSChanged, GSEntries, GSUI
+    global GSChanged, GSEntries, GSUI, GSText, GSSecs, GSList
     if !GSChanged.Count {
         MsgBox("Nothing has been changed.", Title " - Game Settings", "Owner" GSUI.Hwnd)
         return
@@ -2417,6 +2399,21 @@ GS_Save() {
     if GS_GameRunning() {
         MsgBox("Close ROSE first: it writes rose.toml when it closes and would undo these changes.", Title " - Game Settings", "Icon! Owner" GSUI.Hwnd)
         return
+    }
+    ; check what was typed in the number boxes
+    for idx, v in GSText {
+        e := GSEntries[idx]
+        v := Trim(e.Type = "float" ? StrReplace(v, ",", ".") : v)
+        bad := (e.Type = "int" && !RegExMatch(v, "^[+-]?\d+$"))
+            || (e.Type = "float" && !RegExMatch(v, "^[+-]?(\d+\.?\d*|\.\d+)$"))
+        if bad {
+            s := GS_Has(GSSecs, e.T)
+            GSList.Choose(s)
+            GS_Page(s)
+            MsgBox(GS_SectionName(e.T) " > " GS_Label(e.Key) ":`n" (e.Type = "int" ? "please enter a whole number." : "please enter a number, like 0.5."), Title " - Game Settings", "Icon! Owner" GSUI.Hwnd)
+            return
+        }
+        e.Val := e.Type = "int" ? Integer(v) : e.Type = "float" ? Float(v) : v
     }
     f := GS_File()
     text := FileRead(f, "UTF-8")
@@ -2450,8 +2447,9 @@ GS_Save() {
         MsgBox("Could not save rose.toml:`n" err.Message, Title " - Game Settings", "Icon! Owner" GSUI.Hwnd)
         return
     }
-    GSChanged := Map()
-    GS_Fill()
+    for idx in GSChanged
+        try GSEntries[idx].Lbl.Text := GS_Label(GSEntries[idx].Key)
+    GSChanged := Map(), GSText := Map()
     Status_Set("Game settings saved (" f ")")
     MsgBox("Saved. The old file is kept as rose.toml.bak." (missed != "" ? "`n`nThese were no longer in the file and were not saved:" missed : ""), Title " - Game Settings", "Owner" GSUI.Hwnd)
 }
