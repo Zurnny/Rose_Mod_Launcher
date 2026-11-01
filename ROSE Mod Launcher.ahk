@@ -2150,6 +2150,14 @@ GS_SectionName(T) {
     return names.Has(T) ? names[T] : T
 }
 
+; sections shown together as tabs of one entry: section -> [entry name, tab name]
+GS_Group(T) {
+    static groups := Map("ui.chat_box", ["Chat", "Chat box"],
+        "ui.chat_box.chat_bubble_filter", ["Chat", "Chat bubbles"],
+        "ui.chat_box.system_tab_filter", ["Chat", "System tab"])
+    return groups.Has(T) ? groups[T] : ""
+}
+
 GS_Label(Key) {
     static words := Map("fps", "FPS", "npc", "NPC", "ui", "UI", "hp", "HP", "irose", "iROSE", "wasd", "WASD",
         "lod", "LOD", "msaa", "MSAA", "vsync", "VSync", "tos", "ToS", "id", "ID", "lt", "LT", "rt", "RT")
@@ -2273,7 +2281,7 @@ GS_Toml(e, v) {
 GS_GameRunning() => (IsSet(CurrentTROSE) && CurrentTROSE != "" && ProcessExist(CurrentTROSE)) || ProcessExist("trose.exe")
 
 GameSettings_Show(*) {
-    global GSUI, GSList, GSEntries, GSChanged, GSText, GSSecs, GSCtls, GSShown
+    global GSUI, GSList, GSEntries, GSChanged, GSText, GSSecs, GSCtls, GSShown, GSItems
     f := GS_File()
     if !FileExist(f) {
         MsgBox("The game's settings file (rose.toml) was not found in:`n" GS_Dir() "`n`nStart the game once and close it, then try again.", Title " - Game Settings")
@@ -2292,21 +2300,35 @@ GameSettings_Show(*) {
     cols := 1
     for t in GSSecs
         cols := Max(cols, Ceil(bySec[t].Length / ROWS))
-    names := []
-    for t in GSSecs
-        names.Push(GS_SectionName(t))
+    ; the entries on the left: one per section, or one for a group of sections (shown as tabs)
+    GSItems := [], names := [], inGroup := Map()
+    for s, t in GSSecs {
+        g := GS_Group(t)
+        if IsObject(g) {
+            found := 0
+            for it in GSItems
+                if (it.Name = g[1])
+                    found := it
+            if !found
+                found := {Name: g[1], Pages: [], Tabs: [], Tab: ""}, GSItems.Push(found), names.Push(g[1])
+            found.Pages.Push(s), found.Tabs.Push(g[2])
+            inGroup[s] := 1
+        } else {
+            GSItems.Push({Name: GS_SectionName(t), Pages: [s], Tabs: [], Tab: ""}), names.Push(GS_SectionName(t))
+        }
+    }
     GSUI := Gui(, Title " - Game Settings")
     GSUI.SetFont("s9", "Segoe UI")
     GSUI.Add("Text", "x10 y10 w" (180 + cols * COLW) " h34", "The game's own settings (rose.toml). Change what you like, then press Save (a * marks what you changed).`nClose ROSE before saving: the game rewrites this file when it closes.")
     GSList := GSUI.Add("ListBox", "x10 y" TOP " w170 h" (ROWS * RH), names)
-    GSList.OnEvent("Change", (*) => GS_Page(GSList.Value))
+    GSList.OnEvent("Change", (*) => GS_Item(GSList.Value))
     ; every section's settings are made once and only the picked section is shown
     for s, t in GSSecs {
         ctls := []
         for k, idx in bySec[t] {
             e := GSEntries[idx]
             x := 190 + ((k - 1) // ROWS) * COLW
-            y := TOP + Mod(k - 1, ROWS) * RH
+            y := TOP + (inGroup.Has(s) ? 34 : 0) + Mod(k - 1, ROWS) * RH
             cx := x + 205
             e.Lbl := GSUI.Add("Text", "x" x " y" (y + 3) " w200 Hidden", GS_Label(e.Key))
             ctls.Push(e.Lbl)
@@ -2338,6 +2360,14 @@ GameSettings_Show(*) {
         }
         GSCtls.Push(ctls)
     }
+    ; the tabs of each group, above its settings
+    for i, it in GSItems {
+        if (it.Pages.Length < 2)
+            continue
+        it.Tab := GSUI.Add("Tab3", "x190 y" TOP " w" (cols * COLW - 10) " h28 Hidden", it.Tabs)
+        it.Tab.UseTab()
+        it.Tab.OnEvent("Change", GS_TabChange.Bind(i))
+    }
     by := TOP + ROWS * RH + 8
     rx := 180 + cols * COLW
     GSUI.Add("Button", "x190 y" by " w120 h28", "Open rose.toml").OnEvent("Click", (*) => Run('notepad.exe "' GS_File() '"'))
@@ -2348,10 +2378,41 @@ GameSettings_Show(*) {
     If DarkMode = 2
         DarkMode_Setter(GSUI)
     GSList.Choose(1)
-    GS_Page(1)
+    GS_Item(1)
     GSUI.Show("AutoSize")
     if GS_GameRunning()
         MsgBox("ROSE is running. You can look at the settings, but close the game before saving: it writes rose.toml when it closes and would undo the changes.", Title " - Game Settings", "Icon! Owner" GSUI.Hwnd)
+}
+
+; show entry i of the list on the left (with its first tab, if it has tabs)
+GS_Item(i, tab := 1) {
+    global GSItems
+    if (i < 1 || i > GSItems.Length)
+        return
+    for j, it in GSItems
+        if IsObject(it.Tab)
+            it.Tab.Visible := (j = i)
+    it := GSItems[i]
+    if IsObject(it.Tab)
+        it.Tab.Value := tab
+    GS_Page(it.Pages[tab])
+}
+
+GS_TabChange(i, Ctl, *) {
+    global GSItems
+    GS_Page(GSItems[i].Pages[Ctl.Value])
+}
+
+; open the entry (and tab) that holds section page s
+GS_GoPage(s) {
+    global GSItems, GSList
+    for i, it in GSItems
+        for k, p in it.Pages
+            if (p = s) {
+                GSList.Choose(i)
+                GS_Item(i, k)
+                return
+            }
 }
 
 GS_Page(n) {
@@ -2425,8 +2486,7 @@ GS_Save() {
             || (e.Type = "float" && !RegExMatch(v, "^[+-]?(\d+\.?\d*|\.\d+)$"))
         if bad {
             s := GS_Has(GSSecs, e.T)
-            GSList.Choose(s)
-            GS_Page(s)
+            GS_GoPage(s)
             MsgBox(GS_SectionName(e.T) " > " GS_Label(e.Key) ":`n" (e.Type = "int" ? "please enter a whole number." : "please enter a number, like 0.5."), Title " - Game Settings", "Icon! Owner" GSUI.Hwnd)
             return
         }
