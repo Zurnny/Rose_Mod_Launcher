@@ -2165,7 +2165,17 @@ GS_Choices(T, Key) {
         return ["windowed", "maximized", "borderless", "fullscreen"]
     if (T = "video" && Key = "texture_filtering")
         return ["linear", "anisotropic"]
+    if (T = "game" && Key = "title_map_id")      ; the map behind the login screen
+        return ["0 - Random", "4 - Tree house", "7 - Adventurer Plains (starting location)", "16 - Junon pedestals (fountain)"]
     return ""
+}
+
+; which entry of a choice list is this value (a list entry can be "7 - what it is")
+GS_Pick(ch, v) {
+    for i, x in ch
+        if (x = v || SubStr(x, 1, StrLen(v " - ")) = v " - ")
+            return i
+    return 0
 }
 
 ; 0-1 values shown as a percentage with a slider
@@ -2308,10 +2318,11 @@ GameSettings_Show(*) {
                 off.OnEvent("Click", GS_SetVal.Bind(idx, false))
                 ctls.Push(on, off)
             } else if IsObject(ch) {
-                if !GS_Has(ch, e.Val)
-                    ch.Push(e.Val)
-                c := GSUI.Add("DropDownList", "x" cx " y" y " w130 Hidden", ch)
-                c.Choose(GS_Has(ch, e.Val))
+                if !GS_Pick(ch, e.Val)
+                    ch.Push(e.Val "")
+                c := GSUI.Add("DropDownList", "x" cx " y" y " w145 Hidden", ch)
+                c.Choose(GS_Pick(ch, e.Val))
+                try SendMessage(0x160, 260, 0, c)   ; CB_SETDROPPEDWIDTH: the open list shows the whole text
                 c.OnEvent("Change", GS_ListVal.Bind(idx))
                 ctls.Push(c)
             } else if (e.Type = "float" && GS_IsPercent(e.T, e.Key)) {
@@ -2362,7 +2373,13 @@ GS_SetVal(idx, v, *) {
     GS_Mark(idx)
 }
 
-GS_ListVal(idx, Ctl, *) => GS_SetVal(idx, Ctl.Text)
+GS_ListVal(idx, Ctl, *) {
+    global GSEntries
+    v := Ctl.Text
+    if (GSEntries[idx].Type = "int")      ; "7 - Adventurer Plains" -> 7
+        v := Integer(RegExReplace(v, "^\s*([+-]?\d+).*$", "$1"))
+    GS_SetVal(idx, v)
+}
 
 GS_SlideVal(idx, Pct, Ctl, *) {
     Pct.Value := Ctl.Value "%"
