@@ -2145,7 +2145,7 @@ GS_SectionName(T) {
     static names := Map("game", "Game", "video", "Video", "video.resolution", "Video: resolution",
         "sound", "Sound", "ui", "Interface", "ui.chat_box", "Chat box",
         "ui.chat_box.chat_bubble_filter", "Chat bubbles: what shows", "ui.chat_box.system_tab_filter", "System tab: what shows",
-        "ui.themes.rose", "Interface: ROSE theme", "input", "Controls", "community", "Community",
+        "ui.themes.rose", "ROSE theme", "input", "Controls", "community", "Community",
         "widget.quest_tracker", "Quest tracker")
     return names.Has(T) ? names[T] : T
 }
@@ -2157,6 +2157,9 @@ GS_Group(T) {
         "ui.chat_box.system_tab_filter", ["Chat", "System tab"])
     return groups.Has(T) ? groups[T] : ""
 }
+
+; the page a setting is shown on (it is still saved in its own section)
+GS_PageOf(e) => (e.T = "ui" && e.Key = "theme") ? "ui.themes.rose" : e.T
 
 GS_Label(Key) {
     static words := Map("fps", "FPS", "npc", "NPC", "ui", "UI", "hp", "HP", "irose", "iROSE", "wasd", "WASD",
@@ -2292,9 +2295,10 @@ GameSettings_Show(*) {
     GSChanged := Map(), GSText := Map(), GSCtls := [], GSShown := 0
     GSSecs := [], bySec := Map()
     for idx, e in GSEntries {
-        if !bySec.Has(e.T)
-            bySec[e.T] := [], GSSecs.Push(e.T)
-        bySec[e.T].Push(idx)
+        pg := GS_PageOf(e)
+        if !bySec.Has(pg)
+            bySec[pg] := [], GSSecs.Push(pg)
+        bySec[pg].Push(idx)
     }
     ROWS := 16, RH := 26, COLW := 350, TOP := 52
     cols := 1
@@ -2485,9 +2489,9 @@ GS_Save() {
         bad := (e.Type = "int" && !RegExMatch(v, "^[+-]?\d+$"))
             || (e.Type = "float" && !RegExMatch(v, "^[+-]?(\d+\.?\d*|\.\d+)$"))
         if bad {
-            s := GS_Has(GSSecs, e.T)
+            s := GS_Has(GSSecs, GS_PageOf(e))
             GS_GoPage(s)
-            MsgBox(GS_SectionName(e.T) " > " GS_Label(e.Key) ":`n" (e.Type = "int" ? "please enter a whole number." : "please enter a number, like 0.5."), Title " - Game Settings", "Icon! Owner" GSUI.Hwnd)
+            MsgBox(GS_SectionName(GS_PageOf(e)) " > " GS_Label(e.Key) ":`n" (e.Type = "int" ? "please enter a whole number." : "please enter a number, like 0.5."), Title " - Game Settings", "Icon! Owner" GSUI.Hwnd)
             return
         }
         e.Val := e.Type = "int" ? Integer(v) : e.Type = "float" ? Float(v) : v
@@ -2505,7 +2509,7 @@ GS_Save() {
         e := GSEntries[idx]
         k := e.T "|" e.Key
         if !now.Has(k) {
-            missed .= "`n  " GS_SectionName(e.T) " > " GS_Label(e.Key)
+            missed .= "`n  " GS_SectionName(GS_PageOf(e)) " > " GS_Label(e.Key)
             continue
         }
         n := now[k].Line
