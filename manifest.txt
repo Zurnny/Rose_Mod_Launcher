@@ -1,6 +1,6 @@
 ; Update list for ROSE Mod Launcher. Upload this next to the launcher files.
 version=1.14
-changes=New Game Settings button: change the settings in the game's rose.toml (video, sound, interface, chat, controls and more) without opening the game
+changes=New Game Settings button: change the game's settings (rose.toml) without opening the game. Settings backups now include rose.toml too
 f169f58c787fe209c5a1018279d60df40e94c7ad|Launcher Files/banner.png
 c3307a299a063043880fe5770828ce8cbe42913e|Launcher Files/bg.png
 784060f6ec5943f1cded353cf1b57b92e50359a0|Launcher Files/btn_h.png
@@ -24,8 +24,8 @@ fc3280503d288f5382792274b90a1d211f324239|Launcher Files/nav_website_h.png
 9d1b6fbd446c8175a0907a1916405691d69275bb|Launcher Files/ROSE Mod Launcher.ico
 9ea1125c19fc2cf849ed9979512ec5dd1cb8bac3|Launcher Files/start_h.png
 4c3be1435b0b3abba0790ad260b199768cb4603b|Launcher Files/start_n.png
-ab40b1c45e65f4fa83e8d088ff5723b5b21d937c|ROSE Mod Launcher.ahk
-1e5b29c129e0fab757f918d48f8bc2a83800a155|ROSE Mod Launcher.exe
+d231d5c095b6b82175fa8203fa9472e3b9195cd3|ROSE Mod Launcher.ahk
+f983ba963870d4e0abf9e8146b17b00cc2dc58d8|ROSE Mod Launcher.exe
 9ec6728bb38359f3f74d3cbf814ec9dcf0d6333f|Launcher Files/repair_h.png
 0bfc3016e6e65525999cd053d80737a40a6f040b|Launcher Files/repair_n.png
 c68c1d260e489544b5d47c9a207343b7d3f4a1ba|Launcher Files/acct_h.png

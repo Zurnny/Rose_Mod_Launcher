@@ -2138,7 +2138,8 @@ SettingsUI_Move(Dir) {
 ;  changed, keeps a copy of the old file (rose.toml.bak), and is blocked while
 ;  the game runs (the game writes rose.toml when it closes, undoing changes).
 ; -----------------------------------------------------------------------------
-GS_File() => Mods_Game() "rose.toml"
+GS_Dir() => A_AppData "\Rednim Games\ROSE Online\config\"   ; where the game keeps rose.toml
+GS_File() => FileExist(GS_Dir() "rose.toml") ? GS_Dir() "rose.toml" : Mods_Game() "rose.toml"
 
 GS_SectionName(T) {
     static names := Map("game", "Game", "video", "Video", "video.resolution", "Video: resolution",
@@ -2277,7 +2278,7 @@ GameSettings_Show(*) {
     global GSUI, GSList, GSLV, GSEntries, GSChanged, GSSecs
     f := GS_File()
     if !FileExist(f) {
-        MsgBox("There is no rose.toml in the game folder yet:`n" f "`n`nStart the game once and close it, then try again.", Title " - Game Settings")
+        MsgBox("The game's settings file (rose.toml) was not found in:`n" GS_Dir() "`n`nStart the game once and close it, then try again.", Title " - Game Settings")
         return
     }
     try GSUI.Destroy()
@@ -2293,7 +2294,7 @@ GameSettings_Show(*) {
         names.Push(GS_SectionName(t))
     GSUI := Gui(, Title " - Game Settings")
     GSUI.SetFont("s9", "Segoe UI")
-    GSUI.Add("Text", "x10 y10 w640", "The game's own settings (rose.toml). Double-click a setting to change it, then press Save.`nThe game saves this file when it closes, so change settings while ROSE is closed.")
+    GSUI.Add("Text", "x10 y10 w640", "The game's own settings (rose.toml in %AppData%\Rednim Games\ROSE Online\config). Double-click a setting to change it, then press Save.`nThe game saves this file when it closes, so change settings while ROSE is closed.")
     GSList := GSUI.Add("ListBox", "x10 y48 w170 h300", names)
     GSList.OnEvent("Change", (*) => GS_Fill())
     GSLV := GSUI.Add("ListView", "x190 y48 w460 h300 -Multi Grid NoSortHdr", ["Setting", "Value", ""])
@@ -3862,7 +3863,7 @@ Accounts_Backup() {
 
 ; -----------------------------------------------------------------------------
 ;  Settings backup / restore: one zip with the game's own settings files
-;  (rose.toml and any other .toml next to it, the Steampunk sp_*.txt files),
+;  (rose.toml from the game's config folder in %AppData%, the Steampunk sp_*.txt files),
 ;  which mods are on, and the launcher's settings, clients and accounts.
 ;  Accounts only work again on this PC under the same Windows user.
 ; -----------------------------------------------------------------------------
@@ -3879,6 +3880,14 @@ Backup_Stage() {
             n++
         }
     }
+    ; the game's own settings (rose.toml) live in %AppData%\Rednim Games\ROSE Online\config
+    if DirExist(GS_Dir()) {
+        DirCreate st "config"
+        Loop Files GS_Dir() "*.toml", "F" {
+            FileCopy A_LoopFileFullPath, st "config\" A_LoopFileName, 1
+            n++
+        }
+    }
     if FileExist(Mods_Dir(g) "_state.ini") {
         DirCreate st "game\Launcher Mods"
         FileCopy Mods_Dir(g) "_state.ini", st "game\Launcher Mods\_state.ini", 1
@@ -3891,7 +3900,7 @@ Backup_Stage() {
             n++
         }
     }
-    FileAppend "ROSE Mod Launcher settings backup`r`nMade " FormatTime(, "yyyy-MM-dd HH:mm") " from " g "`r`n`r`ngame\     goes into the game folder`r`nlauncher\ goes into %AppData%\RLM`r`n", st "README.txt"
+    FileAppend "ROSE Mod Launcher settings backup`r`nMade " FormatTime(, "yyyy-MM-dd HH:mm") " from " g "`r`n`r`ngame\     goes into the game folder`r`nconfig\   goes into %AppData%\Rednim Games\ROSE Online\config`r`nlauncher\ goes into %AppData%\RLM`r`n", st "README.txt"
     return [st, n]
 }
 
@@ -3931,7 +3940,7 @@ Backup_Restore(*) {
     try DirDelete st, 1
     try {
         RunWait('powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -Path ' "'" f "' -DestinationPath '" st "' -Force" '"', , "Hide")
-        if !DirExist(st "game") && !DirExist(st "launcher")
+        if !DirExist(st "game") && !DirExist(st "launcher") && !DirExist(st "config")
             throw Error("that zip is not a ROSE Mod Launcher settings backup")
         Accounts_Backup()
         n := 0
@@ -3940,6 +3949,11 @@ Backup_Restore(*) {
             rel := SubStr(A_LoopFileFullPath, StrLen(st "game\") + 1)
             Mods_EnsureDir(g rel)
             FileCopy A_LoopFileFullPath, g rel, 1
+            n++
+        }
+        Loop Files st "config\*", "F" {
+            DirCreate GS_Dir()
+            FileCopy A_LoopFileFullPath, GS_Dir() A_LoopFileName, 1
             n++
         }
         Loop Files st "launcher\*", "F" {
